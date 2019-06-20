@@ -36,13 +36,13 @@ class Sensor:
                 # envia o valor da leitura a cada 1s
                 while self.enviando:
                     time.sleep(1)
-                    mensagem = self.geraMensagem(tipo='EVG', id_mensagem='1', valor=self.valor)
+                    mensagem = self.geraMensagem(tipo='EVG', id_mensagem='1', valor=str(self.valor))
                     mensagem = self.codificaMensagem(mensagem)
                     servidor.sendall(mensagem)
 
     # gera o datagrama com cada campo separado por um caractere de espaço
     def geraMensagem(self, tipo, id_mensagem, valor=''):
-        id_sensor = self.id
+        id_sensor = str(self.id)
         return ' '.join([tipo, id_mensagem, id_sensor, valor])
     
     def codificaMensagem(self, mensagem):
@@ -54,12 +54,12 @@ class Sensor:
     def processaResposta(self, listaDados):
         if (listaDados[0] == 'COS'\
             and listaDados[1] == '1'\
-            and listaDados[2] == self.id):
+            and listaDados[2] == str(self.id)):
             self.conectado = True
         
         elif (listaDados[0] == 'EVG'\
               and listaDados[1] == '0'\
-              and listaDados[2] == self.id):
+              and listaDados[2] == str(self.id)):
             self.enviando = True
   
   
