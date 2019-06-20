@@ -1,5 +1,5 @@
 import socket
-import time
+from time import sleep
 
 class Sensor:
     def __init__(self, id, valor):
@@ -8,7 +8,7 @@ class Sensor:
         self.conectado = False
         self.enviando = False
         
-    def processaSocket(self, gerenciador, porta):
+    def processaSocket(self, gerenciador, porta, valores):
         # estabelece um socket para se comunicar com o servidor através do protocolo TCP/IP
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
             conexao.connect((gerenciador, porta))
@@ -19,7 +19,7 @@ class Sensor:
 
             # aguarda uma confirmação de conexão do sensor ao gerenciador
             while not self.conectado:
-                resposta = conexao.recv(20)
+                resposta = conexao.recv(7)
                 resposta = self.decodificaMensagem(resposta)
                 # cria uma lista com cada campo da resposta
                 listaDados = resposta.split(' ')
@@ -28,22 +28,26 @@ class Sensor:
             while self.conectado:
                 # aguarda uma solicitação, pelo gerenciador, de envio dos dados
                 while not self.enviando:
-                    resposta = conexao.recv(20)
+                    resposta = conexao.recv(7)
                     resposta = self.decodificaMensagem(resposta)
                     listaDados = resposta.split(' ')
                     self.processaResposta(listaDados)
                 
                 # envia o valor da leitura a cada 1s
                 while self.enviando:
-                    time.sleep(1)
+                    sleep(1)
                     mensagem = self.geraMensagem(tipo='EVG', id_mensagem='1', valor=str(self.valor))
                     mensagem = self.codificaMensagem(mensagem)
                     conexao.sendall(mensagem)
+                    self.valor = valores.get()
 
     # gera o datagrama com cada campo separado por um caractere de espaço
     def geraMensagem(self, tipo, id_mensagem, valor=''):
         id_sensor = str(self.id)
-        return ' '.join([tipo, id_mensagem, id_sensor, valor])
+        if valor:
+            return ' '.join([tipo, id_mensagem, id_sensor, valor])
+        else:
+            return ' '.join([tipo, id_mensagem, id_sensor])
     
     def codificaMensagem(self, mensagem):
         return mensagem.encode('ascii')
