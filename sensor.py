@@ -10,16 +10,16 @@ class Sensor:
         
     def processaSocket(self, gerenciador, porta):
         # estabelece um socket para se comunicar com o servidor através do protocolo TCP/IP
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as servidor:
-            servidor.connect((gerenciador, porta))
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
+            conexao.connect((gerenciador, porta))
             # mensagem de conexão
             mensagem = self.geraMensagem(tipo='COS', id_mensagem='0')
             mensagem = self.codificaMensagem(mensagem)
-            servidor.sendall(mensagem)
+            conexao.sendall(mensagem)
 
             # aguarda uma confirmação de conexão do sensor ao gerenciador
             while not self.conectado:
-                resposta = servidor.recv(20)
+                resposta = conexao.recv(20)
                 resposta = self.decodificaMensagem(resposta)
                 # cria uma lista com cada campo da resposta
                 listaDados = resposta.split(' ')
@@ -28,7 +28,7 @@ class Sensor:
             while self.conectado:
                 # aguarda uma solicitação, pelo gerenciador, de envio dos dados
                 while not self.enviando:
-                    resposta = servidor.recv(20)
+                    resposta = conexao.recv(20)
                     resposta = self.decodificaMensagem(resposta)
                     listaDados = resposta.split(' ')
                     self.processaResposta(listaDados)
@@ -38,7 +38,7 @@ class Sensor:
                     time.sleep(1)
                     mensagem = self.geraMensagem(tipo='EVG', id_mensagem='1', valor=str(self.valor))
                     mensagem = self.codificaMensagem(mensagem)
-                    servidor.sendall(mensagem)
+                    conexao.sendall(mensagem)
 
     # gera o datagrama com cada campo separado por um caractere de espaço
     def geraMensagem(self, tipo, id_mensagem, valor=''):
