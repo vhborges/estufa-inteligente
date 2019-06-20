@@ -1,8 +1,9 @@
 from sensor import SensorCO2, SensorTemperatura, SensorUmidade
 import socket
 from multiprocessing import Queue, Process, Lock
+from time import sleep
 
-def gerenciador(host, porta, tempAmbiente, temperaturas, conectado):
+def gerenciador(host, porta, conectado):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as serv:
         serv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         serv.bind((host, porta))
@@ -20,9 +21,8 @@ def gerenciador(host, porta, tempAmbiente, temperaturas, conectado):
             while True:
                 resposta = con.recv(10)
                 resposta = resposta.decode('ascii')
-                print(resposta.split(' ')[3])
-                tempAmbiente = tempAmbiente + 1
-                temperaturas.put(tempAmbiente)
+                temperatura = resposta.split(' ')[3]
+                print(temperatura)
 
 sensortemp = SensorTemperatura(1, 20);
 porta = 65000
@@ -34,13 +34,18 @@ temperaturas = Queue()
 conectado = Lock()
 conectado.acquire()
 
-process1 = Process(target=gerenciador, args=(host, porta, tempAmbiente, temperaturas, conectado))
+process1 = Process(target=gerenciador, args=(host, porta, conectado))
 process2 = Process(target=sensortemp.processaSocket, args=(host, porta, temperaturas))
 
 process1.start()
 conectado.acquire()
 process2.start()
 conectado.release()
+
+while True:
+    tempAmbiente = tempAmbiente + 1
+    temperaturas.put(tempAmbiente)
+    sleep(1)
 
 process1.join()
 process2.join()
