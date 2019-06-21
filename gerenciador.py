@@ -30,15 +30,15 @@ def gerenciador(host, porta, conectado):
 sensortemp = SensorTemperatura(1, 20);
 porta = 65000
 host = '127.0.0.1'
+
 tempAmbiente = 20
 incremento = Decimal('0.1')
 
 temperaturas = Queue()
+atualizandoTemp = Lock()
 
 conectado = Lock()
 conectado.acquire()
-
-atualizandoTemp = Lock()
 
 process1 = Process(target=gerenciador, args=(host, porta, conectado))
 process2 = Process(target=sensortemp.processaSocket, args=(host, porta, temperaturas, atualizandoTemp))
