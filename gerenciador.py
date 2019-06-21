@@ -14,12 +14,14 @@ def gerenciador(host, porta, conectado):
         with con:
             print('conectado por', cliente)
             print('aguardando mensagem')
-            recebe = con.recv(7)
-            print('mensagem recebida', recebe)
-            con.sendall(b'COS 1 1')
-            con.sendall(b'EVG 0 1')
+            tamanho = int(con.recv(2).decode('ascii'))
+            recebe = con.recv(tamanho)
+            print('mensagem recebida', recebe.decode('ascii'))
+            con.sendall(b'07COS 1 1')
+            con.sendall(b'07EVG 0 1')
             while True:
-                resposta = con.recv(10)
+                tamanho = int(con.recv(2).decode('ascii'))
+                resposta = con.recv(tamanho)
                 resposta = resposta.decode('ascii')
                 temperatura = resposta.split(' ')[3]
                 print(temperatura)

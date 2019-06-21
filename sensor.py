@@ -14,40 +14,53 @@ class Sensor:
             conexao.connect((gerenciador, porta))
             # mensagem de conexão
             mensagem = self.geraMensagem(tipo='COS', id_mensagem='0')
-            mensagem = self.codificaMensagem(mensagem)
             conexao.sendall(mensagem)
 
             # aguarda uma confirmação de conexão do sensor ao gerenciador
             while not self.conectado:
-                resposta = conexao.recv(7)
-                resposta = self.decodificaMensagem(resposta)
-                # cria uma lista com cada campo da resposta
-                listaDados = resposta.split(' ')
-                self.processaResposta(listaDados)
+                resposta = self.geraResposta(conexao)
+                self.processaResposta(resposta)
                 
             while self.conectado:
                 # aguarda uma solicitação, pelo gerenciador, de envio dos dados
                 while not self.enviando:
-                    resposta = conexao.recv(7)
-                    resposta = self.decodificaMensagem(resposta)
-                    listaDados = resposta.split(' ')
-                    self.processaResposta(listaDados)
+                    resposta = self.geraResposta(conexao)
+                    self.processaResposta(resposta)
                 
                 # envia o valor da leitura a cada 1s
                 while self.enviando:
                     sleep(1)
                     mensagem = self.geraMensagem(tipo='EVG', id_mensagem='1', valor=str(self.valor))
-                    mensagem = self.codificaMensagem(mensagem)
                     conexao.sendall(mensagem)
                     self.valor = valores.get()
 
-    # gera o datagrama com cada campo separado por um caractere de espaço
+    # gera o PDU da aplicação com cada campo separado por um caractere de espaço
     def geraMensagem(self, tipo, id_mensagem, valor=''):
         id_sensor = str(self.id)
         if valor:
-            return ' '.join([tipo, id_mensagem, id_sensor, valor])
+            mensagem = ' '.join([tipo, id_mensagem, id_sensor, valor])
         else:
-            return ' '.join([tipo, id_mensagem, id_sensor])
+            mensagem = ' '.join([tipo, id_mensagem, id_sensor])
+        tamanho = len(mensagem)
+        # pdu = tamanho de 2 bytes + resto da mensagem
+        pdu = '{:02d}'.format(tamanho) + mensagem
+        return self.codificaMensagem(pdu)
+    
+    # gera a resposta recebida do servidor
+    def geraResposta(self, conexao):
+        # campo 'tamanho' ocupa 2 bytes
+        tamanho = int(self.decodificaMensagem(conexao.recv(2)))
+        respostabyte = conexao.recv(tamanho)
+        resposta = self.decodificaMensagem(respostabyte)
+        # lista com os dados da resposta
+        listaDados = resposta.split(' ')
+        # convertendo para dicionario: melhor legibilidade
+        dictDados = {
+            'tipo' : listaDados[0],
+            'id_mensagem' : listaDados[1],
+            'id_sensor' : listaDados[2]
+        }
+        return dictDados
     
     def codificaMensagem(self, mensagem):
         return mensagem.encode('ascii')
@@ -55,15 +68,15 @@ class Sensor:
     def decodificaMensagem(self, mensagem):
         return mensagem.decode('ascii')
     
-    def processaResposta(self, listaDados):
-        if (listaDados[0] == 'COS'\
-            and listaDados[1] == '1'\
-            and listaDados[2] == str(self.id)):
+    def processaResposta(self, resposta):
+        if (resposta['tipo'] == 'COS'\
+            and resposta['id_mensagem'] == '1'\
+            and resposta['id_sensor'] == str(self.id)):
             self.conectado = True
         
-        elif (listaDados[0] == 'EVG'\
-              and listaDados[1] == '0'\
-              and listaDados[2] == str(self.id)):
+        elif (resposta['tipo'] == 'EVG'\
+              and resposta['id_mensagem'] == '0'\
+              and resposta['id_sensor'] == str(self.id)):
             self.enviando = True
   
   
