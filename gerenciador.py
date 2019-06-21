@@ -2,6 +2,7 @@ from sensor import SensorCO2, SensorTemperatura, SensorUmidade
 import socket
 from multiprocessing import Queue, Process, Lock
 from time import sleep
+from decimal import Decimal
 
 def gerenciador(host, porta, conectado):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as serv:
@@ -30,14 +31,17 @@ sensortemp = SensorTemperatura(1, 20);
 porta = 65000
 host = '127.0.0.1'
 tempAmbiente = 20
+incremento = Decimal('0.1')
 
 temperaturas = Queue()
 
 conectado = Lock()
 conectado.acquire()
 
+atualizandoTemp = Lock()
+
 process1 = Process(target=gerenciador, args=(host, porta, conectado))
-process2 = Process(target=sensortemp.processaSocket, args=(host, porta, temperaturas))
+process2 = Process(target=sensortemp.processaSocket, args=(host, porta, temperaturas, atualizandoTemp))
 
 process1.start()
 conectado.acquire()
@@ -45,9 +49,12 @@ process2.start()
 conectado.release()
 
 while True:
-    tempAmbiente = tempAmbiente + 1
-    temperaturas.put(tempAmbiente)
-    sleep(1)
+    tempAmbiente += incremento
+    with atualizandoTemp:
+        if not temperaturas.empty():
+            temperaturas.get()
+        temperaturas.put(tempAmbiente)
+    sleep(0.5)
 
 process1.join()
 process2.join()

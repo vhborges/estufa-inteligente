@@ -8,7 +8,7 @@ class Sensor:
         self.conectado = False
         self.enviando = False
         
-    def processaSocket(self, gerenciador, porta, valores):
+    def processaSocket(self, gerenciador, porta, valores, atualizandoTemp):
         # estabelece um socket para se comunicar com o servidor através do protocolo TCP/IP
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
             conexao.connect((gerenciador, porta))
@@ -32,7 +32,8 @@ class Sensor:
                     sleep(1)
                     mensagem = self.geraMensagem(tipo='EVG', id_mensagem='1', valor=str(self.valor))
                     conexao.sendall(mensagem)
-                    self.valor = valores.get()
+                    with atualizandoTemp:
+                        self.valor = valores.get()
 
     # gera o PDU da aplicação com cada campo separado por um caractere de espaço
     def geraMensagem(self, tipo, id_mensagem, valor=''):
