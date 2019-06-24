@@ -13,7 +13,7 @@ class Sensor:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
             conexao.connect((gerenciador, porta))
             # mensagem de conexão
-            mensagem = self.geraMensagem(tipo='COS', id_mensagem='0')
+            mensagem = self.geraMensagem(tipo='COS', id_mensagem='0', id_sensor=str(self.id))
             conexao.sendall(mensagem)
 
             # aguarda uma confirmação de conexão do sensor ao gerenciador
@@ -30,14 +30,13 @@ class Sensor:
                 # envia o valor da leitura a cada 1s
                 while self.enviando:
                     sleep(1)
-                    mensagem = self.geraMensagem(tipo='EVG', id_mensagem='1', valor=str(self.valor))
+                    mensagem = self.geraMensagem(tipo='EVG', id_mensagem='1', id_sensor=str(self.id), valor=str(self.valor))
                     conexao.sendall(mensagem)
                     with atualizandoTemp:
                         self.valor = valores.get()
 
     # gera o PDU da aplicação com cada campo separado por um caractere de espaço
-    def geraMensagem(self, tipo, id_mensagem, valor=''):
-        id_sensor = str(self.id)
+    def geraMensagem(self, tipo, id_mensagem, id_sensor, valor=''):
         if valor:
             mensagem = ' '.join([tipo, id_mensagem, id_sensor, valor])
         else:
