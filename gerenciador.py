@@ -1,10 +1,6 @@
 from componente import Componente
-from sensor import SensorCO2, SensorTemperatura, SensorUmidade
 import socket
 #from threading import Thread, Lock
-from multiprocessing import Queue, Process, Lock, Event
-from time import sleep
-from decimal import Decimal
 
 class Gerenciador(Componente):
     def __init__(self, nclientes, host):
@@ -47,21 +43,3 @@ class Gerenciador(Componente):
             conexao.sendall(confirmaConexao)
             solicitaLeitura = self.geraMensagem(tipo='EVG', id_mensagem='0', id_sensor=mensagem['id_sensor'])
             conexao.sendall(solicitaLeitura)
-
-gerenciador = Gerenciador(nclientes=3, host='127.0.0.1')
-sensortemp = SensorTemperatura(id=1, temperaturaInicial=20, incrementoTemp=0.1, enderecoGerenciador=(gerenciador.host, 65000))
-
-temperaturas = Queue()
-atualizandoTemp = Lock()
-
-servidorConfigurado = Event()
-
-processoGerenciador = Process(target=gerenciador.processaSocket, args=(sensortemp.enderecoGerenciador[1], servidorConfigurado,))
-processoSensorTemp = Process(target=sensortemp.iniciaThreads, args=(temperaturas, atualizandoTemp))
-
-processoGerenciador.start()
-servidorConfigurado.wait()
-processoSensorTemp.start()
-
-processoGerenciador.join()
-processoSensorTemp.join()
