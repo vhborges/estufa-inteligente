@@ -48,32 +48,21 @@ class Gerenciador(Componente):
             solicitaLeitura = self.geraMensagem(tipo='EVG', id_mensagem='0', id_sensor=mensagem['id_sensor'])
             conexao.sendall(solicitaLeitura)
 
-gerenciador = Gerenciador(3, '127.0.0.1')
-sensortemp = SensorTemperatura(1)
-porta = 65000
-
-tempAmbiente = 20
-incremento = Decimal('0.1')
+gerenciador = Gerenciador(nclientes=3, host='127.0.0.1')
+sensortemp = SensorTemperatura(id=1, temperaturaInicial=20, incrementoTemp=0.1)
+enderecoGerenciador = (gerenciador.host, 65000 + sensortemp.id)
 
 temperaturas = Queue()
 atualizandoTemp = Lock()
 
 servidorConfigurado = Event()
 
-process1 = Process(target=gerenciador.processaSocket, args=(porta, servidorConfigurado,))
-process2 = Process(target=sensortemp.processaSocket, args=(gerenciador.host, porta, temperaturas, atualizandoTemp,))
+processoGerenciador = Process(target=gerenciador.processaSocket, args=(enderecoGerenciador[1], servidorConfigurado,))
+processoSensorTemp = Process(target=sensortemp.iniciaThreads, args=(temperaturas, atualizandoTemp, enderecoGerenciador))
 
-process1.start()
+processoGerenciador.start()
 servidorConfigurado.wait()
-process2.start()
+processoSensorTemp.start()
 
-while True:
-    tempAmbiente += incremento
-    with atualizandoTemp:
-        if not temperaturas.empty():
-            temperaturas.get()
-        temperaturas.put(tempAmbiente)
-    sleep(0.5)
-
-process1.join()
-process2.join()
+processoGerenciador.join()
+processoSensorTemp.join()
