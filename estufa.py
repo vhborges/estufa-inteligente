@@ -6,18 +6,19 @@ from multiprocessing import Queue, Process, Lock, Event
 
 if __name__ == "__main__":
     gerenciador = Gerenciador(nconexoes=8, host='127.0.0.1')
-    sensortemp = SensorTemperatura(id=1, temperaturaInicial=20, incrementoTemp=0.1, enderecoGerenciador=(gerenciador.host, 65000))
+    portas = [(65000 + i) for i in range(9)]
+    sensortemp = SensorTemperatura(id=1, temperaturaInicial=20, incrementoTemp=0.1, enderecoGerenciador=(gerenciador.host, portas[0]))
 
     temperaturas = Queue()
     atualizandoTemp = Lock()
 
-    servidorConfigurado = Event()
+    gerenciadorPronto = Event()
 
-    processoGerenciador = Process(target=gerenciador.processaSocket, args=(sensortemp.enderecoGerenciador[1], servidorConfigurado,))
+    processoGerenciador = Process(target=gerenciador.iniciaThreads, args=(portas, gerenciadorPronto,))
     processoSensorTemp = Process(target=sensortemp.iniciaThreads, args=(temperaturas, atualizandoTemp))
 
     processoGerenciador.start()
-    servidorConfigurado.wait()
+    gerenciadorPronto.wait()
     processoSensorTemp.start()
 
     processoGerenciador.join()

@@ -6,9 +6,9 @@ class Componente(ABC):
     def processaMensagem(self, mensagem):
         pass
 
-    @abstractmethod
-    def processaSocket(self):
-        pass
+    #@abstractmethod
+    #def processaSocket(self):
+    #    pass
 
     # gera o PDU da aplicação com cada campo separado por um caractere de espaço
     def geraMensagem(self, tipo, id_mensagem, id_componente, valor=''):
