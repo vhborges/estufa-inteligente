@@ -22,7 +22,7 @@ class Gerenciador(Componente):
                 print('conectado por', cliente)
                 print('aguardando mensagem')
                 mensagem = self.recebeMensagem(conexao)
-                print('mensagem recebida', mensagem['tipo'], mensagem['id_mensagem'], mensagem['id_sensor'])
+                print('mensagem recebida', mensagem['tipo'], mensagem['id_mensagem'], mensagem['id_componente'])
                 self.processaMensagem(mensagem, conexao)
                 while True:
                     mensagem = self.recebeMensagem(conexao)
@@ -31,15 +31,15 @@ class Gerenciador(Componente):
     
     def processaMensagem(self, mensagem, conexao):
         if (mensagem['tipo'] == 'EVG' and mensagem['id_mensagem'] == '1'):
-            if mensagem['id_sensor'] == '1':
+            if mensagem['id_componente'] == '1':
                 self.temperatura = mensagem['valor']
-            if mensagem['id_sensor'] == '2':
+            if mensagem['id_componente'] == '2':
                 self.umidade = mensagem['valor']
-            if mensagem['id_sensor'] == '3':
+            if mensagem['id_componente'] == '3':
                 self.co2 = mensagem['valor']
 
         elif (mensagem['tipo'] == 'COS' and mensagem['id_mensagem'] == '0'):
-            confirmaConexao = self.geraMensagem(tipo='COS', id_mensagem='1', id_sensor=mensagem['id_sensor'])
+            confirmaConexao = self.geraMensagem(tipo='COS', id_mensagem='1', id_componente=mensagem['id_componente'])
             conexao.sendall(confirmaConexao)
-            solicitaLeitura = self.geraMensagem(tipo='EVG', id_mensagem='0', id_sensor=mensagem['id_sensor'])
+            solicitaLeitura = self.geraMensagem(tipo='EVG', id_mensagem='0', id_componente=mensagem['id_componente'])
             conexao.sendall(solicitaLeitura)

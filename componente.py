@@ -11,11 +11,11 @@ class Componente(ABC):
         pass
 
     # gera o PDU da aplicação com cada campo separado por um caractere de espaço
-    def geraMensagem(self, tipo, id_mensagem, id_sensor, valor=''):
+    def geraMensagem(self, tipo, id_mensagem, id_componente, valor=''):
         if valor:
-            mensagem = ' '.join([tipo, id_mensagem, id_sensor, valor])
+            mensagem = ' '.join([tipo, id_mensagem, id_componente, valor])
         else:
-            mensagem = ' '.join([tipo, id_mensagem, id_sensor])
+            mensagem = ' '.join([tipo, id_mensagem, id_componente])
         tamanho = len(mensagem)
         # pdu = tamanho de 2 bytes + resto da mensagem
         pdu = '{:02d}'.format(tamanho) + mensagem
@@ -33,7 +33,7 @@ class Componente(ABC):
         dictDados = {
             'tipo' : listaDados[0],
             'id_mensagem' : listaDados[1],
-            'id_sensor' : listaDados[2]
+            'id_componente' : listaDados[2]
         }
         if len(listaDados) == 4:
             dictDados['valor'] = listaDados[3]
