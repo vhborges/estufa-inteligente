@@ -1,6 +1,7 @@
 from componente import Componente
 import socket
 from threading import Thread, Event
+from time import sleep
 
 class Gerenciador(Componente):
     def __init__(self, nconexoes, host):
@@ -14,11 +15,29 @@ class Gerenciador(Componente):
         servidorTempPronto = Event()
         sensorTemp = Thread(target=self.processaSensor, args=(portas[0], servidorTempPronto,))
 
+        servidorUmidPronto = Event()
+        sensorUmid = Thread(target=self.processaSensor, args=(portas[1], servidorUmidPronto,))
+
+        servidorCO2Pronto = Event()
+        sensorCO2 = Thread(target=self.processaSensor, args=(portas[2], servidorCO2Pronto,))
+
+        servidorClientePronto = Event()
+        cliente = Thread(target=self.processaCliente, args=(portas[3], servidorClientePronto,))
+
         sensorTemp.start()
+        sensorUmid.start()
+        sensorCO2.start()
+        cliente.start()
         servidorTempPronto.wait()
+        servidorUmidPronto.wait()
+        servidorCO2Pronto.wait()
+        servidorClientePronto.wait()
         gerenciadorPronto.set()
 
         sensorTemp.join()
+        sensorUmid.join()
+        sensorCO2.join()
+        cliente.join()
 
     def processaSensor(self, porta, servidorPronto):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as serv:
@@ -47,7 +66,14 @@ class Gerenciador(Componente):
                     while recebendo.is_set():
                         mensagem = self.recebeMensagem(conexao)
                         self.processaMensagem(mensagem, conexao, conectado, recebendo)
-                        print('Temperatura:', self.temperatura)
+    
+    def processaCliente(self, porta, servidorPronto):
+        servidorPronto.set()
+        while True:
+            sleep(2)
+            print('Temperatura:', self.temperatura)
+            print('Umidade:', self.umidade)
+            print('CO2:', self.co2)
     
     def processaMensagem(self, mensagem, conexao, conectado, recebendo):
         if (mensagem['tipo'] == 'EVG' and mensagem['id_mensagem'] == '1'):
