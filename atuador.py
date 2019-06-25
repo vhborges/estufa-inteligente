@@ -92,7 +92,7 @@ class AtuadorResfriador(Atuador):
             while ligado.is_set():
                 with atualizando:
                     tempAtual = valores.get()
-                    valores.put(tempAtual - Decimal('0.3')) 
+                    valores.put(tempAtual - Decimal('1.5')) 
                 sleep(0.5)
             ligado.wait() 
 

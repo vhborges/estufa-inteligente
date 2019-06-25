@@ -10,6 +10,16 @@ class Gerenciador(Componente):
         self.temperatura = None
         self.umidade = None
         self.co2 = None
+        self.tempMaxResfriador = 40
+        self.tempMinResfriador = 15
+        self.tempMaxAquecedor = 35
+        self.tempMinAquecedor = 10
+        self.umidadeMin = 20
+        self.umidadeMax = 50
+        self.CO2min = 390
+        self.CO2max = 410
+        self.resfriadorLigado = False
+        self.aquecedorLigado = False
     
     def iniciaThreads(self, portas, gerenciadorPronto):
         servidorTempPronto = Event()
@@ -24,20 +34,33 @@ class Gerenciador(Componente):
         servidorClientePronto = Event()
         cliente = Thread(target=self.processaCliente, args=(servidorClientePronto,))
 
+        servidorAquecedorPronto = Event()
+        aquecedor = Thread(target=self.processaSocket, args=(portas[3], servidorAquecedorPronto,))
+
+        servidorResfriadorPronto = Event()
+        resfriador = Thread(target=self.processaSocket, args=(portas[4], servidorResfriadorPronto,))
+
         sensorTemp.start()
         sensorUmid.start()
         sensorCO2.start()
         cliente.start()
+        aquecedor.start()
+        resfriador.start()
+
         servidorTempPronto.wait()
         servidorUmidPronto.wait()
         servidorCO2Pronto.wait()
         servidorClientePronto.wait()
+        servidorAquecedorPronto.wait()
+        servidorResfriadorPronto.wait()
         gerenciadorPronto.set()
 
         sensorTemp.join()
         sensorUmid.join()
         sensorCO2.join()
         cliente.join()
+        aquecedor.join()
+        resfriador.join()
     
     def processaSocket(self, porta, servidorPronto):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as serv:
@@ -65,7 +88,7 @@ class Gerenciador(Componente):
                     if int(mensagem['id_componente']) in range(1, 4):
                         self.processaSensor(conexao, conectado, recebendo)
                     elif int(mensagem['id_componente']) in range(4, 8):
-                        self.processaAtuador(conexao, conectado)
+                        self.processaAtuador(conexao, mensagem['id_componente'])
                     elif int(mensagem['id_componente']) == 8:
                         self.processaCliente(servidorPronto)
                 
@@ -75,8 +98,50 @@ class Gerenciador(Componente):
             mensagem = self.recebeMensagem(conexao)
             self.processaMensagem(mensagem, conexao, conectado)
     
-    def processaAtuador(self, conexao, conectado):
-        pass
+    def processaAtuador(self, conexao, id_componente):
+        if id_componente == '4':
+            if self.temperatura <= self.tempMinAquecedor:
+                # liga o aquecedor
+                mensagem = self.geraMensagem(tipo='ACA', id_mensagem='0', id_componente='4')
+                conexao.sendall(mensagem)
+                self.aquecedorLigado = True
+            elif self.temperatura >= self.tempMaxAquecedor and self.aquecedorLigado:
+                # desliga o aquecedor
+                mensagem = self.geraMensagem(tipo='DEA', id_mensagem='0', id_componente='4')
+                conexao.sendall(mensagem)
+                self.aquecedorLigado = False
+        
+        elif id_componente == '5':
+            if self.temperatura >= self.tempMaxResfriador:
+                # liga resfriador
+                mensagem = self.geraMensagem(tipo='ACA', id_mensagem='0', id_componente='5')
+                conexao.sendall(mensagem)
+                self.resfriadorLigado = True
+            elif self.temperatura <= self.tempMinResfriador and self.resfriadorLigado:
+                # desliga resfriador
+                mensagem = self.geraMensagem(tipo='DEA', id_mensagem='0', id_componente='5')
+                conexao.sendall(mensagem)
+                self.resfriadorLigado = False
+        
+        elif id_componente == '6':
+            if self.umidade <= self.umidadeMin:
+                # liga o irrigador
+                mensagem = self.geraMensagem(tipo='ACA', id_mensagem='0', id_componente='6')
+                conexao.sendall(mensagem)
+            elif self.umidade >= self.umidadeMax:
+                # desliga o irrigador
+                mensagem = self.geraMensagem(tipo='DEA', id_mensagem='0', id_componente='6')
+                conexao.sendall(mensagem)
+
+        elif id_componente == '7':
+            if self.co2 <= self.CO2min:
+                # liga o injetor de CO2
+                mensagem = self.geraMensagem(tipo='ACA', id_mensagem='0', id_componente='7')
+                conexao.sendall(mensagem)
+            elif self.co2 >= self.CO2max:
+                # desliga o injetor de CO2
+                mensagem = self.geraMensagem(tipo='DEA', id_mensagem='0', id_componente='7')
+                conexao.sendall(mensagem)
 
     def processaCliente(self, servidorPronto):
         servidorPronto.set()
