@@ -51,26 +51,26 @@ class Atuador(Componente):
         #mensagem para conectar o atuador
         if (resposta['tipo'] == 'COA'\
             and resposta['id_mensagem'] == '1'\
-            and resposta['id_atuador'] == str(self.id)):
+            and resposta['id_componente'] == str(self.id)):
             conectado.set() 
         ##mensagem para ativar o atuador 
         elif (resposta['tipo'] == 'ACA'\
                 and resposta['id_mensagem'] == '0'\
-                and resposta['id_atuador'] == str(self.id)):
+                and resposta['id_componente'] == str(self.id)):
             ligado.set()
             mensagem = self.geraMensagem(tipo='ACA', id_mensagem='1', id_componente=str(self.id))
             conexao.sendall(mensagem)
         ##mesnagem para desligar o atuador
         elif (resposta['tipo'] == 'DEA'\
                 and resposta['id_mensagem'] == '0'\
-                and resposta['id_atuador'] == str(self.id)):
+                and resposta['id_componente'] == str(self.id)):
             ligado.clear()
             mensagem = self.geraMensagem(tipo='DEA', id_mensagem='1', id_componente=str(self.id))
             conexao.sendall(mensagem)  
         #mensagem para desconectar o atuador
         elif (resposta['tipo'] == 'DCA'\
                 and resposta['id_mensagem'] == '0'\
-                and resposta['id_atuador'] == str(self.id)):
+                and resposta['id_componente'] == str(self.id)):
             ligado.clear() 
             conectado.clear()
             mensagem = self.geraMensagem(tipo='DCA', id_mensagem='1', id_componente=str(self.id))

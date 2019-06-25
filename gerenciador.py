@@ -154,13 +154,18 @@ class Gerenciador(Componente):
     def processaMensagem(self, mensagem, conexao, conectado):
         if (mensagem['tipo'] == 'EVG' and mensagem['id_mensagem'] == '1'):
             if mensagem['id_componente'] == '1':
-                self.temperatura = mensagem['valor']
+                self.temperatura = float(mensagem['valor'])
             if mensagem['id_componente'] == '2':
-                self.umidade = mensagem['valor']
+                self.umidade = float(mensagem['valor'])
             if mensagem['id_componente'] == '3':
-                self.co2 = mensagem['valor']
+                self.co2 = float(mensagem['valor'])
 
         elif (mensagem['tipo'] == 'COS' and mensagem['id_mensagem'] == '0'):
             confirmaConexao = self.geraMensagem(tipo='COS', id_mensagem='1', id_componente=mensagem['id_componente'])
+            conexao.sendall(confirmaConexao)
+            conectado.set()
+        
+        elif (mensagem['tipo'] == 'COA' and mensagem['id_mensagem'] == '0'):
+            confirmaConexao = self.geraMensagem(tipo='COA', id_mensagem='1', id_componente=mensagem['id_componente'])
             conexao.sendall(confirmaConexao)
             conectado.set()

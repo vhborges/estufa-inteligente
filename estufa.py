@@ -1,13 +1,13 @@
 from gerenciador import Gerenciador
 from sensor import SensorCO2, SensorTemperatura, SensorUmidade
 from atuador import Atuador, AtuadorAquecedor, AtuadorResfriador, AtuadorUmidade, AtuadorCO2
-from multiprocessing import Queue
-from threading import Thread, Lock, Event
+from multiprocessing import Queue, Process, Lock, Event
+#from threading import Thread, Lock, Event
 
 if __name__ == "__main__":
     gerenciador = Gerenciador(nconexoes=8, host='127.0.0.1')
 
-    portas = [(65000 + i) for i in range(9)]
+    portas = [(65100 + i) for i in range(9)]
     
     sensortemp = SensorTemperatura(id=1, temperaturaInicial=20, incrementoTemp=1, enderecoGerenciador=(gerenciador.host, portas[0]))
     sensorumid = SensorUmidade(id=2, umidadeInicial=10, incrementoUmid=-0.1, enderecoGerenciador=(gerenciador.host, portas[1]))
@@ -25,12 +25,12 @@ if __name__ == "__main__":
 
     gerenciadorPronto = Event()
 
-    processoGerenciador = Thread(target=gerenciador.iniciaThreads, args=(portas, gerenciadorPronto,))
-    processoSensorTemp = Thread(target=sensortemp.iniciaThreads, args=(temperaturas, atualizandoTemp))
-    processoSensorUmid = Thread(target=sensorumid.iniciaThreads, args=(umidades, atualizandoUmid))
-    processoSensorCO2 = Thread(target=sensorco2.iniciaThreads, args=(co2, atualizandoCO2))
-    processoAtuadorAquec = Thread(target=atuadorAquec.iniciaThreads, args=(temperaturas, atualizandoTemp))
-    processoAtuadorResfr = Thread(target=atuadorResfr.iniciaThreads, args=(temperaturas, atualizandoTemp))
+    processoGerenciador = Process(target=gerenciador.iniciaThreads, args=(portas, gerenciadorPronto,))
+    processoSensorTemp = Process(target=sensortemp.iniciaThreads, args=(temperaturas, atualizandoTemp))
+    processoSensorUmid = Process(target=sensorumid.iniciaThreads, args=(umidades, atualizandoUmid))
+    processoSensorCO2 = Process(target=sensorco2.iniciaThreads, args=(co2, atualizandoCO2))
+    processoAtuadorAquec = Process(target=atuadorAquec.iniciaThreads, args=(temperaturas, atualizandoTemp))
+    processoAtuadorResfr = Process(target=atuadorResfr.iniciaThreads, args=(temperaturas, atualizandoTemp))
 
     processoGerenciador.start()
     gerenciadorPronto.wait()
