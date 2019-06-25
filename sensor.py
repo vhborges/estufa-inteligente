@@ -6,17 +6,18 @@ from threading import Thread, Event
 from decimal import Decimal
 
 class Sensor(Componente):
-    def __init__(self, id, valorInicial, incrementoInicial):
+    def __init__(self, id, valorInicial, incrementoInicial, enderecoGerenciador):
         self.id = id
         self.valor = valorInicial
         self.incrementoValor = Decimal(str(incrementoInicial))
         self.enviando = False
+        self.enderecoGerenciador = enderecoGerenciador
         
-    def iniciaThreads(self, valores, atualizandoValor, enderecoGerenciador):
+    def iniciaThreads(self, valores, atualizandoValor):
         conectado = Event()
 
         atualizador = Thread(target=self.atualizaValor, args=(atualizandoValor, valores, conectado,))
-        comunicador = Thread(target=self.processaSocket, args=(enderecoGerenciador, conectado,))
+        comunicador = Thread(target=self.processaSocket, args=(conectado,))
 
         atualizador.start()
         comunicador.start()
@@ -35,10 +36,10 @@ class Sensor(Componente):
                 valores.put(self.valor)
             sleep(0.5)
 
-    def processaSocket(self, enderecoGerenciador, conectado):
+    def processaSocket(self, conectado):
         # estabelece um socket para se comunicar com o servidor através do protocolo TCP/IP
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
-            conexao.connect(enderecoGerenciador)
+            conexao.connect(self.enderecoGerenciador)
             # mensagem de conexão
             mensagem = self.geraMensagem(tipo='COS', id_mensagem='0', id_sensor=str(self.id))
             conexao.sendall(mensagem)
@@ -73,14 +74,14 @@ class Sensor(Componente):
     
   
 class SensorTemperatura(Sensor):
-    def __init__(self, id, temperaturaInicial, incrementoTemp):
-        Sensor.__init__(self, id, temperaturaInicial, incrementoTemp)
+    def __init__(self, id, temperaturaInicial, incrementoTemp, enderecoGerenciador):
+        Sensor.__init__(self, id, temperaturaInicial, incrementoTemp, enderecoGerenciador)
 
 class SensorUmidade(Sensor):
-    def __init__(self, id, umidadeInicial, incrementoUmid):
-        Sensor.__init__(self, id, umidadeInicial, incrementoUmid)
+    def __init__(self, id, umidadeInicial, incrementoUmid, enderecoGerenciador):
+        Sensor.__init__(self, id, umidadeInicial, incrementoUmid, enderecoGerenciador)
 
 
 class SensorCO2(Sensor):
-    def __init__(self, id, co2Inicial, incrementoCO2):
-        Sensor.__init__(self, id, co2Inicial, incrementoCO2)
+    def __init__(self, id, co2Inicial, incrementoCO2, enderecoGerenciador):
+        Sensor.__init__(self, id, co2Inicial, incrementoCO2, enderecoGerenciador)

@@ -49,16 +49,15 @@ class Gerenciador(Componente):
             conexao.sendall(solicitaLeitura)
 
 gerenciador = Gerenciador(nclientes=3, host='127.0.0.1')
-sensortemp = SensorTemperatura(id=1, temperaturaInicial=20, incrementoTemp=0.1)
-enderecoGerenciador = (gerenciador.host, 65000 + sensortemp.id)
+sensortemp = SensorTemperatura(id=1, temperaturaInicial=20, incrementoTemp=0.1, enderecoGerenciador=(gerenciador.host, 65000))
 
 temperaturas = Queue()
 atualizandoTemp = Lock()
 
 servidorConfigurado = Event()
 
-processoGerenciador = Process(target=gerenciador.processaSocket, args=(enderecoGerenciador[1], servidorConfigurado,))
-processoSensorTemp = Process(target=sensortemp.iniciaThreads, args=(temperaturas, atualizandoTemp, enderecoGerenciador))
+processoGerenciador = Process(target=gerenciador.processaSocket, args=(sensortemp.enderecoGerenciador[1], servidorConfigurado,))
+processoSensorTemp = Process(target=sensortemp.iniciaThreads, args=(temperaturas, atualizandoTemp))
 
 processoGerenciador.start()
 servidorConfigurado.wait()
