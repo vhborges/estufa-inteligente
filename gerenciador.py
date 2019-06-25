@@ -1,10 +1,9 @@
 from componente import Componente
 import socket
-#from threading import Thread, Lock
 
 class Gerenciador(Componente):
-    def __init__(self, nclientes, host):
-        self.nclientes = nclientes
+    def __init__(self, nconexoes, host):
+        self.nconexoes = nconexoes
         self.host = host
         self.temperatura = None
         self.umidade = None
@@ -14,7 +13,7 @@ class Gerenciador(Componente):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as serv:
             serv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             serv.bind((self.host, porta))
-            serv.listen(self.nclientes)
+            serv.listen(self.nconexoes)
             print('aguardando conexão')
             servidorConfigurado.set()
             conexao, cliente = serv.accept()
