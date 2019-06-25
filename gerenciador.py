@@ -2,7 +2,7 @@ from componente import Componente
 from sensor import SensorCO2, SensorTemperatura, SensorUmidade
 import socket
 #from threading import Thread, Lock
-from multiprocessing import Queue, Process, Lock
+from multiprocessing import Queue, Process, Lock, Event
 from time import sleep
 from decimal import Decimal
 
@@ -14,13 +14,13 @@ class Gerenciador(Componente):
         self.umidade = None
         self.co2 = None
     
-    def processaSocket(self, porta, conectado):
+    def processaSocket(self, porta, servidorConfigurado):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as serv:
             serv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             serv.bind((self.host, porta))
             serv.listen(self.nclientes)
             print('aguardando conexão')
-            conectado.release()
+            servidorConfigurado.set()
             conexao, cliente = serv.accept()
             with conexao:
                 print('conectado por', cliente)
@@ -58,15 +58,14 @@ incremento = Decimal('0.1')
 temperaturas = Queue()
 atualizandoTemp = Lock()
 
-conectado = Lock()
-conectado.acquire()
+servidorConfigurado = Event()
 
-process1 = Process(target=gerenciador.processaSocket, args=(porta, conectado,))
+process1 = Process(target=gerenciador.processaSocket, args=(porta, servidorConfigurado,))
 process2 = Process(target=sensortemp.processaSocket, args=(gerenciador.host, porta, temperaturas, atualizandoTemp,))
 
 process1.start()
-with conectado:
-    process2.start()
+servidorConfigurado.wait()
+process2.start()
 
 while True:
     tempAmbiente += incremento
