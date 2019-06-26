@@ -33,13 +33,20 @@ class Gerenciador(Componente):
         cliente = Thread(target=self.processaCliente, args=(servidorClientePronto,))
 
         aquecedorAtuando = Event()
-        resfriadorAtuando = Event()
-
         servidorAquecedorPronto = Event()
         aquecedor = Thread(target=self.processaSocket, args=(portas[3], servidorAquecedorPronto, aquecedorAtuando,))
 
+        resfriadorAtuando = Event()
         servidorResfriadorPronto = Event()
         resfriador = Thread(target=self.processaSocket, args=(portas[4], servidorResfriadorPronto, resfriadorAtuando,))
+
+        irrigadorAtuando = Event()
+        servidorIrrigadorPronto = Event()
+        irrigador = Thread(target=self.processaSocket, args=(portas[5], servidorIrrigadorPronto, irrigadorAtuando,))
+
+        injetorAtuando = Event()
+        servidorInjetorPronto = Event()
+        injetor = Thread(target=self.processaSocket, args=(portas[6], servidorInjetorPronto, injetorAtuando,))
 
         sensorTemp.start()
         sensorUmid.start()
@@ -47,6 +54,8 @@ class Gerenciador(Componente):
         cliente.start()
         aquecedor.start()
         resfriador.start()
+        irrigador.start()
+        injetor.start()
 
         servidorTempPronto.wait()
         servidorUmidPronto.wait()
@@ -54,6 +63,8 @@ class Gerenciador(Componente):
         servidorClientePronto.wait()
         servidorAquecedorPronto.wait()
         servidorResfriadorPronto.wait()
+        servidorIrrigadorPronto.wait()
+        servidorInjetorPronto.wait()
         gerenciadorPronto.set()
 
         sensorTemp.join()
@@ -62,6 +73,8 @@ class Gerenciador(Componente):
         cliente.join()
         aquecedor.join()
         resfriador.join()
+        irrigador.join()
+        injetor.join()
     
     def processaSocket(self, porta, servidorPronto, componenteAtuando):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as serv:
@@ -100,13 +113,13 @@ class Gerenciador(Componente):
             self.processaMensagem(mensagem, conexao, conectado)
     
     def processaAtuador(self, conexao, conectado, id_componente, componenteAtuando):
-        if id_componente == 4:
+        if id_componente == '4':
             self.monitoraAquecedor(conexao, conectado, componenteAtuando)
-        elif id_componente == 5:
+        elif id_componente == '5':
             self.monitoraResfriador(conexao, conectado, componenteAtuando)
-        elif id_componente == 6:
+        elif id_componente == '6':
             self.monitoraIrrigador(conexao, conectado, componenteAtuando)
-        elif id_componente == 7:
+        elif id_componente == '7':
             self.monitoraInjetor(conexao, conectado, componenteAtuando)
     
     def monitoraAquecedor(self, conexao, conectado, aquecedorAtuando):
