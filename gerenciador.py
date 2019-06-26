@@ -122,13 +122,13 @@ class Gerenciador(Componente):
             self.processaMensagem(mensagem, conexao, conectado)
     
     def processaAtuador(self, conexao, conectado, id_componente, componenteAtuando):
-        if id_componente == '4':
+        if id_componente == '4' and self.temperatura != None:
             self.monitoraAquecedor(conexao, conectado, componenteAtuando)
-        elif id_componente == '5':
+        elif id_componente == '5' and self.temperatura != None:
             self.monitoraResfriador(conexao, conectado, componenteAtuando)
-        elif id_componente == '6':
+        elif id_componente == '6' and self.umidade != None:
             self.monitoraIrrigador(conexao, conectado, componenteAtuando)
-        elif id_componente == '7':
+        elif id_componente == '7' and self.co2 != None:
             self.monitoraInjetor(conexao, conectado, componenteAtuando)
     
     def monitoraAquecedor(self, conexao, conectado, aquecedorAtuando):
