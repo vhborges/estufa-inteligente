@@ -6,9 +6,10 @@ from abc import ABC, abstractmethod
 from threading import Thread, Event
 
 class Atuador(Componente):
-    def __init__(self, id, enderecoGerenciador):
+    def __init__(self, id, incremento, enderecoGerenciador):
         self.id = id
         self.enderecoGerenciador = enderecoGerenciador
+        self.incremento = Decimal(str(incremento))
 
     def iniciaThreads(self, valores, atualizando):
         conectado = Event()
@@ -22,6 +23,17 @@ class Atuador(Componente):
 
         atuador.join()
         comunicador.join()
+
+    #atuacao do atuador (incrementa ou decrementa os valores, a depender das classes filhas)
+    def atuacao(self, valores, atualizando, conectado, ligado):
+        conectado.wait()
+        while conectado.is_set():
+            ligado.wait()
+            while ligado.is_set():
+                with atualizando:
+                    tempAtual = valores.get()
+                    valores.put(tempAtual + self.incremento) 
+                sleep(0.5)
 
     def processaSocket(self, conectado, ligado):
         # estabelece um socket para se comunicar com o servidor através do protocolo TCP/IP
@@ -76,67 +88,19 @@ class Atuador(Componente):
             mensagem = self.geraMensagem(tipo='DCA', id_mensagem='1', id_componente=str(self.id))
             conexao.sendall(mensagem)
 
-    @abstractmethod
-    def atuacao(self, valores, atualizando, conectado, ligado):
-        pass
 
+class Resfriador(Atuador):
+    def __init__(self, id, decrementoTemp, enderecoGerenciador):
+        Atuador.__init__(self, id, -decrementoTemp, enderecoGerenciador)
 
-class AtuadorResfriador(Atuador):
-    def __init__(self, id, enderecoGerenciador):
-        Atuador.__init__(self, id, enderecoGerenciador)
+class Aquecedor(Atuador):
+    def __init__(self, id, incrementoTemp, enderecoGerenciador):
+        Atuador.__init__(self, id, incrementoTemp, enderecoGerenciador)
 
-    #atuacao do resfriador (diminui a temperatura)
-    def atuacao(self, valores, atualizando, conectado, ligado):
-        conectado.wait()
-        while conectado.is_set():
-            ligado.wait()
-            while ligado.is_set():
-                with atualizando:
-                    tempAtual = valores.get()
-                    valores.put(tempAtual - Decimal('1.5')) 
-                sleep(0.5)
+class Irrigador(Atuador):
+    def __init__(self, id, incrementoUmid, enderecoGerenciador):
+        Atuador.__init__(self, id, incrementoUmid, enderecoGerenciador)
 
-class AtuadorAquecedor(Atuador):
-    def __init__(self, id, enderecoGerenciador):
-        Atuador.__init__(self, id, enderecoGerenciador)
-
-    #atuacao do aquecedor (aumenta a temperatura)
-    def atuacao(self, valores, atualizando, conectado, ligado):  
-        conectado.wait()
-        while conectado.is_set():
-            ligado.wait()
-            while ligado.is_set():
-                with atualizando:
-                    tempAtual = valores.get()
-                    valores.put(tempAtual + Decimal('1.5')) 
-                sleep(0.5) 
-
-class AtuadorUmidade(Atuador):
-    def __init__(self, id, enderecoGerenciador):
-        Atuador.__init__(self, id, enderecoGerenciador)
-
-    #atuacao do sistema de irrigacao (aumenta a umidade)
-    def atuacao(self, valores, atualizando, conectado, ligado):     
-        conectado.wait()
-        while conectado.is_set():
-            ligado.wait()
-            while ligado.is_set():
-                with atualizando:
-                    tempAtual = valores.get()
-                    valores.put(tempAtual + Decimal('1.5')) 
-                sleep(0.5) 
-
-class AtuadorCO2(Atuador):
-    def __init__(self, id, enderecoGerenciador):
-        Atuador.__init__(self, id, enderecoGerenciador)
-
-    #atuacao do injetor de CO2 (aumenta a concentracao de CO2)
-    def atuacao(self, valores, atualizando, conectado, ligado):
-        conectado.wait()
-        while conectado.is_set():
-            ligado.wait()
-            while ligado.is_set():
-                with atualizando:
-                    tempAtual = valores.get()
-                    valores.put(tempAtual + Decimal('1.5')) 
-                sleep(0.5) 
+class InjetorCO2(Atuador):
+    def __init__(self, id, incrementoCO2, enderecoGerenciador):
+        Atuador.__init__(self, id, incrementoCO2, enderecoGerenciador)

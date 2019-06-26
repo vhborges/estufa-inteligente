@@ -10,6 +10,7 @@ class Gerenciador(Componente):
         self.temperatura = None
         self.umidade = None
         self.co2 = None
+        #limiares de valores permitidos
         self.tempMaxResfriador = 40
         self.tempMinResfriador = 15
         self.tempMaxAquecedor = 35
@@ -20,6 +21,8 @@ class Gerenciador(Componente):
         self.CO2max = 410
     
     def iniciaThreads(self, portas, gerenciadorPronto):
+        #declaração das threads juntamente com os Events que sinalizarão quando os servidores estiverem prontos
+        #para receber conexões dos outros componentes
         servidorTempPronto = Event()
         sensorTemp = Thread(target=self.processaSocket, args=(portas[0], servidorTempPronto, None,))
 
@@ -33,36 +36,54 @@ class Gerenciador(Componente):
         cliente = Thread(target=self.processaCliente, args=(servidorClientePronto,))
 
         aquecedorAtuando = Event()
-        resfriadorAtuando = Event()
-
         servidorAquecedorPronto = Event()
         aquecedor = Thread(target=self.processaSocket, args=(portas[3], servidorAquecedorPronto, aquecedorAtuando,))
 
+        resfriadorAtuando = Event()
         servidorResfriadorPronto = Event()
         resfriador = Thread(target=self.processaSocket, args=(portas[4], servidorResfriadorPronto, resfriadorAtuando,))
 
+        irrigadorAtuando = Event()
+        servidorIrrigadorPronto = Event()
+        irrigador = Thread(target=self.processaSocket, args=(portas[5], servidorIrrigadorPronto, irrigadorAtuando,))
+
+        injetorAtuando = Event()
+        servidorInjetorPronto = Event()
+        injetor = Thread(target=self.processaSocket, args=(portas[6], servidorInjetorPronto, injetorAtuando,))
+
+        #inicia as threads
         sensorTemp.start()
         sensorUmid.start()
         sensorCO2.start()
         cliente.start()
         aquecedor.start()
         resfriador.start()
+        irrigador.start()
+        injetor.start()
 
+        # aguarda até que todos os servidores estejam prontos
+        #e então sinaliza que o gerenciador está pronto
         servidorTempPronto.wait()
         servidorUmidPronto.wait()
         servidorCO2Pronto.wait()
         servidorClientePronto.wait()
         servidorAquecedorPronto.wait()
         servidorResfriadorPronto.wait()
+        servidorIrrigadorPronto.wait()
+        servidorInjetorPronto.wait()
         gerenciadorPronto.set()
 
+        #aguarda a finalização das threads
         sensorTemp.join()
         sensorUmid.join()
         sensorCO2.join()
         cliente.join()
         aquecedor.join()
         resfriador.join()
+        irrigador.join()
+        injetor.join()
     
+    #processa o socket que receberá conexão dos outros componentes
     def processaSocket(self, porta, servidorPronto, componenteAtuando):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as serv:
             serv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -85,6 +106,7 @@ class Gerenciador(Componente):
                 conexao.sendall(solicitaLeitura)
                 recebendo.set()
                 
+                # a depender do tipo de componente, redireciona para cada função específica
                 while conectado.is_set():
                     if int(mensagem['id_componente']) in range(1, 4):
                         self.processaSensor(conexao, conectado, recebendo)
@@ -100,13 +122,13 @@ class Gerenciador(Componente):
             self.processaMensagem(mensagem, conexao, conectado)
     
     def processaAtuador(self, conexao, conectado, id_componente, componenteAtuando):
-        if id_componente == 4:
+        if id_componente == '4' and self.temperatura != None:
             self.monitoraAquecedor(conexao, conectado, componenteAtuando)
-        elif id_componente == 5:
+        elif id_componente == '5' and self.temperatura != None:
             self.monitoraResfriador(conexao, conectado, componenteAtuando)
-        elif id_componente == 6:
+        elif id_componente == '6' and self.umidade != None:
             self.monitoraIrrigador(conexao, conectado, componenteAtuando)
-        elif id_componente == 7:
+        elif id_componente == '7' and self.co2 != None:
             self.monitoraInjetor(conexao, conectado, componenteAtuando)
     
     def monitoraAquecedor(self, conexao, conectado, aquecedorAtuando):
