@@ -31,7 +31,7 @@ class Atuador(Componente):
             mensagem = self.geraMensagem(tipo='COA', id_mensagem='0', id_componente=str(self.id))
             conexao.sendall(mensagem)
 
-            # aguarda uma confirmação de conexão do sensor ao gerenciador
+            # aguarda uma confirmação de conexão do atuador ao gerenciador
             while not conectado.is_set():
                 resposta = self.recebeMensagem(conexao)
                 self.processaMensagem(resposta, conexao, conectado, ligado)
@@ -60,7 +60,7 @@ class Atuador(Componente):
             ligado.set()
             mensagem = self.geraMensagem(tipo='ACA', id_mensagem='1', id_componente=str(self.id))
             conexao.sendall(mensagem)
-        ##mesnagem para desligar o atuador
+        ##mensagem para desligar o atuador
         elif (resposta['tipo'] == 'DEA'\
                 and resposta['id_mensagem'] == '0'\
                 and resposta['id_componente'] == str(self.id)):
@@ -85,7 +85,7 @@ class AtuadorResfriador(Atuador):
     def __init__(self, id, enderecoGerenciador):
         Atuador.__init__(self, id, enderecoGerenciador)
 
-    #atuacao do resfriador
+    #atuacao do resfriador (diminui a temperatura)
     def atuacao(self, valores, atualizando, conectado, ligado):
         conectado.wait()
         while conectado.is_set():
@@ -100,7 +100,7 @@ class AtuadorAquecedor(Atuador):
     def __init__(self, id, enderecoGerenciador):
         Atuador.__init__(self, id, enderecoGerenciador)
 
-    #atuacao do aquecedor
+    #atuacao do aquecedor (aumenta a temperatura)
     def atuacao(self, valores, atualizando, conectado, ligado):  
         conectado.wait()
         while conectado.is_set():
@@ -108,14 +108,14 @@ class AtuadorAquecedor(Atuador):
             while ligado.is_set():
                 with atualizando:
                     tempAtual = valores.get()
-                    valores.put(tempAtual + Decimal('0.3')) 
+                    valores.put(tempAtual + Decimal('1.5')) 
                 sleep(0.5) 
 
 class AtuadorUmidade(Atuador):
     def __init__(self, id, enderecoGerenciador):
         Atuador.__init__(self, id, enderecoGerenciador)
 
-    #atuacao do sistema de irrigacao
+    #atuacao do sistema de irrigacao (aumenta a umidade)
     def atuacao(self, valores, atualizando, conectado, ligado):     
         conectado.wait()
         while conectado.is_set():
@@ -123,14 +123,14 @@ class AtuadorUmidade(Atuador):
             while ligado.is_set():
                 with atualizando:
                     tempAtual = valores.get()
-                    valores.put(tempAtual + Decimal('0.3')) 
+                    valores.put(tempAtual + Decimal('1.5')) 
                 sleep(0.5) 
 
 class AtuadorCO2(Atuador):
     def __init__(self, id, enderecoGerenciador):
         Atuador.__init__(self, id, enderecoGerenciador)
 
-    #atuacao do injetor de CO2
+    #atuacao do injetor de CO2 (aumenta a concentracao de CO2)
     def atuacao(self, valores, atualizando, conectado, ligado):
         conectado.wait()
         while conectado.is_set():
@@ -138,5 +138,5 @@ class AtuadorCO2(Atuador):
             while ligado.is_set():
                 with atualizando:
                     tempAtual = valores.get()
-                    valores.put(tempAtual + Decimal('0.3')) 
+                    valores.put(tempAtual + Decimal('1.5')) 
                 sleep(0.5) 

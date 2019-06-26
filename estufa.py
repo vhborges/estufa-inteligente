@@ -7,15 +7,18 @@ from multiprocessing import Queue, Process, Lock, Event
 if __name__ == "__main__":
     gerenciador = Gerenciador(nconexoes=8, host='127.0.0.1')
 
-    portas = [(65100 + i) for i in range(9)]
+    #especificação das portas para cada processo (componentes)
+    portas = [(65050 + i) for i in range(9)]
     
+    #declaração dos componentes
     sensortemp = SensorTemperatura(id=1, temperaturaInicial=20, incrementoTemp=1, enderecoGerenciador=(gerenciador.host, portas[0]))
-    sensorumid = SensorUmidade(id=2, umidadeInicial=10, incrementoUmid=-0.1, enderecoGerenciador=(gerenciador.host, portas[1]))
-    sensorco2 = SensorCO2(id=3, co2Inicial=30, incrementoCO2=-0.1, enderecoGerenciador=(gerenciador.host, portas[2]))
+    sensorumid = SensorUmidade(id=2, umidadeInicial=40, incrementoUmid=-1, enderecoGerenciador=(gerenciador.host, portas[1]))
+    sensorco2 = SensorCO2(id=3, co2Inicial=400, incrementoCO2=-1, enderecoGerenciador=(gerenciador.host, portas[2]))
 
     atuadorAquec = AtuadorResfriador(id=4, enderecoGerenciador=(gerenciador.host, portas[3]))
     atuadorResfr = AtuadorResfriador(id=5, enderecoGerenciador=(gerenciador.host, portas[4]))
 
+    #valores dos parametros da estufa
     temperaturas = Queue()
     umidades = Queue()
     co2 = Queue()
@@ -25,6 +28,7 @@ if __name__ == "__main__":
 
     gerenciadorPronto = Event()
 
+    #criação dos processos
     processoGerenciador = Process(target=gerenciador.iniciaThreads, args=(portas, gerenciadorPronto,))
     processoSensorTemp = Process(target=sensortemp.iniciaThreads, args=(temperaturas, atualizandoTemp))
     processoSensorUmid = Process(target=sensorumid.iniciaThreads, args=(umidades, atualizandoUmid))

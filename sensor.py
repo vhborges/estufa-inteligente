@@ -25,6 +25,7 @@ class Sensor(Componente):
         atualizador.join()
         comunicador.join()
 
+    #atualiza o valor (temperatura, pressão e umidade) sendo lido pelos sensores
     def atualizaValor(self, atualizandoValor, valores, conectado):
         conectado.wait()
 
@@ -61,11 +62,12 @@ class Sensor(Componente):
                     sleep(1)
 
     def processaMensagem(self, mensagem, conectado):
+        #processa uma mensagem de conexão de um sensor 
         if (mensagem['tipo'] == 'COS'\
             and mensagem['id_mensagem'] == '1'\
             and mensagem['id_componente'] == str(self.id)):
             conectado.set()
-        
+        #processa uma mensagem pedido de envio da leitura dos dados de um sensor para o gerenciador
         elif (mensagem['tipo'] == 'EVG'\
               and mensagem['id_mensagem'] == '0'\
               and mensagem['id_componente'] == str(self.id)):
