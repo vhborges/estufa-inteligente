@@ -10,6 +10,7 @@ class Gerenciador(Componente):
         self.temperatura = None
         self.umidade = None
         self.co2 = None
+        #limiares de valores permitidos
         self.tempMaxResfriador = 40
         self.tempMinResfriador = 15
         self.tempMaxAquecedor = 35
@@ -20,6 +21,8 @@ class Gerenciador(Componente):
         self.CO2max = 410
     
     def iniciaThreads(self, portas, gerenciadorPronto):
+        #declaração das threads juntamente com os Events que sinalizarão quando os servidores estiverem prontos
+        #para receber conexões dos outros componentes
         servidorTempPronto = Event()
         sensorTemp = Thread(target=self.processaSocket, args=(portas[0], servidorTempPronto, None,))
 
@@ -48,6 +51,7 @@ class Gerenciador(Componente):
         servidorInjetorPronto = Event()
         injetor = Thread(target=self.processaSocket, args=(portas[6], servidorInjetorPronto, injetorAtuando,))
 
+        #inicia as threads
         sensorTemp.start()
         sensorUmid.start()
         sensorCO2.start()
@@ -57,6 +61,8 @@ class Gerenciador(Componente):
         irrigador.start()
         injetor.start()
 
+        # aguarda até que todos os servidores estejam prontos
+        #e então sinaliza que o gerenciador está pronto
         servidorTempPronto.wait()
         servidorUmidPronto.wait()
         servidorCO2Pronto.wait()
@@ -67,6 +73,7 @@ class Gerenciador(Componente):
         servidorInjetorPronto.wait()
         gerenciadorPronto.set()
 
+        #aguarda a finalização das threads
         sensorTemp.join()
         sensorUmid.join()
         sensorCO2.join()
@@ -76,6 +83,7 @@ class Gerenciador(Componente):
         irrigador.join()
         injetor.join()
     
+    #processa o socket que receberá conexão dos outros componentes
     def processaSocket(self, porta, servidorPronto, componenteAtuando):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as serv:
             serv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -98,6 +106,7 @@ class Gerenciador(Componente):
                 conexao.sendall(solicitaLeitura)
                 recebendo.set()
                 
+                # a depender do tipo de componente, redireciona para cada função específica
                 while conectado.is_set():
                     if int(mensagem['id_componente']) in range(1, 4):
                         self.processaSensor(conexao, conectado, recebendo)

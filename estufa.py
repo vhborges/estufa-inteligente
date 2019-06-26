@@ -1,6 +1,6 @@
 from gerenciador import Gerenciador
 from sensor import SensorCO2, SensorTemperatura, SensorUmidade
-from atuador import Atuador, AtuadorAquecedor, AtuadorResfriador, AtuadorUmidade, AtuadorCO2
+from atuador import Atuador, Aquecedor, Resfriador, Irrigador, InjetorCO2
 from multiprocessing import Queue, Process, Lock, Event
 #from threading import Thread, Lock, Event
 
@@ -11,13 +11,13 @@ if __name__ == "__main__":
     portas = [(65000 + i) for i in range(9)]
     
     #declaração dos componentes
-    sensortemp = SensorTemperatura(id=1, temperaturaInicial=20, incrementoTemp=-1, enderecoGerenciador=(gerenciador.host, portas[0]))
+    sensortemp = SensorTemperatura(id=1, temperaturaInicial=20, incrementoTemp=1, enderecoGerenciador=(gerenciador.host, portas[0]))
     sensorumid = SensorUmidade(id=2, umidadeInicial=40, incrementoUmid=-1, enderecoGerenciador=(gerenciador.host, portas[1]))
     sensorco2 = SensorCO2(id=3, co2Inicial=400, incrementoCO2=-1, enderecoGerenciador=(gerenciador.host, portas[2]))
-    aquecedor = AtuadorAquecedor(id=4, enderecoGerenciador=(gerenciador.host, portas[3]))
-    resfriador = AtuadorResfriador(id=5, enderecoGerenciador=(gerenciador.host, portas[4]))
-    irrigador = AtuadorUmidade(id=6, enderecoGerenciador=(gerenciador.host, portas[5]))
-    injetor = AtuadorCO2(id=7, enderecoGerenciador=(gerenciador.host, portas[6]))
+    aquecedor = Aquecedor(id=4, incrementoTemp=1.5, enderecoGerenciador=(gerenciador.host, portas[3]))
+    resfriador = Resfriador(id=5, decrementoTemp=1.5,enderecoGerenciador=(gerenciador.host, portas[4]))
+    irrigador = Irrigador(id=6, incrementoUmid=1.5,enderecoGerenciador=(gerenciador.host, portas[5]))
+    injetor = InjetorCO2(id=7, incrementoCO2=1.5,enderecoGerenciador=(gerenciador.host, portas[6]))
 
     #valores dos parametros da estufa
     temperaturas = Queue()
