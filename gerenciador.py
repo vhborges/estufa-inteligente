@@ -101,45 +101,41 @@ class Gerenciador(Componente):
     def processaAtuador(self, conexao, id_componente):
         if id_componente == '4':
             if self.temperatura <= self.tempMinAquecedor:
-                # liga o aquecedor
+                # solicita acionamento do aquecedor
                 mensagem = self.geraMensagem(tipo='ACA', id_mensagem='0', id_componente='4')
                 conexao.sendall(mensagem)
-                self.aquecedorLigado = True
             elif self.temperatura >= self.tempMaxAquecedor and self.aquecedorLigado:
-                # desliga o aquecedor
+                # solicita desligamento do aquecedor
                 mensagem = self.geraMensagem(tipo='DEA', id_mensagem='0', id_componente='4')
                 conexao.sendall(mensagem)
-                self.aquecedorLigado = False
         
         elif id_componente == '5':
             if self.temperatura >= self.tempMaxResfriador:
-                # liga resfriador
+                # solicita acionamento do resfriador
                 mensagem = self.geraMensagem(tipo='ACA', id_mensagem='0', id_componente='5')
                 conexao.sendall(mensagem)
-                self.resfriadorLigado = True
             elif self.temperatura <= self.tempMinResfriador and self.resfriadorLigado:
-                # desliga resfriador
+                # solicita desligamento do resfriador
                 mensagem = self.geraMensagem(tipo='DEA', id_mensagem='0', id_componente='5')
                 conexao.sendall(mensagem)
-                self.resfriadorLigado = False
         
         elif id_componente == '6':
             if self.umidade <= self.umidadeMin:
-                # liga o irrigador
+                # solicita acionamento do irrigador
                 mensagem = self.geraMensagem(tipo='ACA', id_mensagem='0', id_componente='6')
                 conexao.sendall(mensagem)
             elif self.umidade >= self.umidadeMax:
-                # desliga o irrigador
+                # solicita desligamento do irrigador
                 mensagem = self.geraMensagem(tipo='DEA', id_mensagem='0', id_componente='6')
                 conexao.sendall(mensagem)
 
         elif id_componente == '7':
             if self.co2 <= self.CO2min:
-                # liga o injetor de CO2
+                # solicita acionamento do injetor de CO2
                 mensagem = self.geraMensagem(tipo='ACA', id_mensagem='0', id_componente='7')
                 conexao.sendall(mensagem)
             elif self.co2 >= self.CO2max:
-                # desliga o injetor de CO2
+                # solicita desligamento do injetor de CO2
                 mensagem = self.geraMensagem(tipo='DEA', id_mensagem='0', id_componente='7')
                 conexao.sendall(mensagem)
 
@@ -169,3 +165,15 @@ class Gerenciador(Componente):
             confirmaConexao = self.geraMensagem(tipo='COA', id_mensagem='1', id_componente=mensagem['id_componente'])
             conexao.sendall(confirmaConexao)
             conectado.set()
+        
+        elif (mensagem['tipo'] == 'ACA' and mensagem['id_mensagem'] == '1'):
+            if (mensagem['id_componente'] == '4'):
+                self.aquecedorLigado = True
+            elif (mensagem['id_componente'] == '5'):
+                self.resfriadorLigado = True
+
+        elif (mensagem['tipo'] == 'DEA' and mensagem['id_mensagem'] == '1'):
+            if (mensagem['id_componente'] == '4'):
+                self.aquecedorLigado = False
+            elif (mensagem['id_componente'] == '5'):
+                self.resfriadorLigado = False

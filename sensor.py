@@ -29,10 +29,9 @@ class Sensor(Componente):
         conectado.wait()
 
         while conectado.is_set():
-            self.valor += self.incrementoValor
             with atualizandoValor:
                 if not valores.empty():
-                    valores.get()
+                    self.valor = valores.get() + self.incrementoValor
                 valores.put(self.valor)
             sleep(0.5)
 

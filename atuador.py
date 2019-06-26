@@ -89,12 +89,12 @@ class AtuadorResfriador(Atuador):
     def atuacao(self, valores, atualizando, conectado, ligado):
         conectado.wait()
         while conectado.is_set():
+            ligado.wait()
             while ligado.is_set():
                 with atualizando:
                     tempAtual = valores.get()
                     valores.put(tempAtual - Decimal('1.5')) 
                 sleep(0.5)
-            ligado.wait() 
 
 class AtuadorAquecedor(Atuador):
     def __init__(self, id, enderecoGerenciador):
@@ -104,10 +104,12 @@ class AtuadorAquecedor(Atuador):
     def atuacao(self, valores, atualizando, conectado, ligado):  
         conectado.wait()
         while conectado.is_set():
-            with atualizando:
-                tempAtual = valores.get()
-                valores.put(tempAtual + Decimal('0.3')) 
-            sleep(0.5) 
+            ligado.wait()
+            while ligado.is_set():
+                with atualizando:
+                    tempAtual = valores.get()
+                    valores.put(tempAtual + Decimal('0.3')) 
+                sleep(0.5) 
 
 class AtuadorUmidade(Atuador):
     def __init__(self, id, enderecoGerenciador):
@@ -117,10 +119,12 @@ class AtuadorUmidade(Atuador):
     def atuacao(self, valores, atualizando, conectado, ligado):     
         conectado.wait()
         while conectado.is_set():
-            with atualizando:
-                tempAtual = valores.get()
-                valores.put(tempAtual + Decimal('0.3')) 
-            sleep(0.5) 
+            ligado.wait()
+            while ligado.is_set():
+                with atualizando:
+                    tempAtual = valores.get()
+                    valores.put(tempAtual + Decimal('0.3')) 
+                sleep(0.5) 
 
 class AtuadorCO2(Atuador):
     def __init__(self, id, enderecoGerenciador):
@@ -130,7 +134,9 @@ class AtuadorCO2(Atuador):
     def atuacao(self, valores, atualizando, conectado, ligado):
         conectado.wait()
         while conectado.is_set():
-            with atualizando:
-                tempAtual = valores.get()
-                valores.put(tempAtual + Decimal('0.3')) 
-            sleep(0.5) 
+            ligado.wait()
+            while ligado.is_set():
+                with atualizando:
+                    tempAtual = valores.get()
+                    valores.put(tempAtual + Decimal('0.3')) 
+                sleep(0.5) 
