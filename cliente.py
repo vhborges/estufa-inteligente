@@ -5,16 +5,17 @@ from threading import Thread, Event
 import os
 
 class Cliente(Componente):
-    def __init__(self, id, valor, tipo, enderecoGerenciador):
-        self.id = id
-        self.valor = valor
-        self.tipo = tipo
-        self.enderecoGerenciador = enderecoGerenciador
+    def __init__(self):
+        self.id = None
+        self.valor = None
+        self.tipo = None
+        self.unidade = None
+        #self.enderecoGerenciador = enderecoGerenciador
 
-    def iniciaThreads(self, valores, atualizando):
+    def iniciaThreads(self, valores):
         conectado = Event()
 
-        inputUsuario = Thread(target=self.recebeSensor, args=(valores, atualizando, conectado,))
+        inputUsuario = Thread(target=self.recebeSensor, args=(valores, conectado,))
         comunicador = Thread(target=self.processaSocket, args=(conectado, ))
 
         inputUsuario.start()
@@ -26,34 +27,42 @@ class Cliente(Componente):
     def processaSocket(self):
         # estabelece um socket para se comunicar com o servidor através do protocolo TCP/IP
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
-            conexao.connect(self.enderecoGerenciador)
+            #conexao.connect(self.enderecoGerenciador)
             # mensagem de conexão
             mensagem = self.geraMensagem(tipo='LES', id_mensagem='0', id_componente=self.id)
             conexao.sendall(mensagem)
             mensagem = self.recebeMensagem(conexao)
-            self.processaResposta(mensagem, conexao)
+            self.processaMensagem(mensagem, conexao)
 
-    def processaResposta(self, resposta, conexao):
+    def processaMensagem(self, resposta, conexao):
         if (resposta['tipo'] == 'LES'\
             and resposta['id_mensagem'] == '1'\
             and resposta['id_componente'] == str(self.id)):
             self.valor = resposta['valor']
-            if resposta['id_componente'] == '1':
-                self.tipo = 'temperatura'
-            elif resposta['id_componente'] == '2':
-                self.tipo = 'umidade'
-            elif resposta['id_componente'] == '3':
-                self.tipo = 'CO2'
             self.recebeSensor()
 
     def exibeSensor(self):
+        self.apaga()
+        if(self.id == ''):
+            self.id = None
         if(self.id == '1' or self.id == '2' or self.id == '3'):
-            self.processaSocket()
-            print("\nO sensor de", self.tipo, "está marcando", self.valor, "\n")
-        elif(self.id == -1):
-            print("\n")
+            #self.processaSocket()
+            if self.id == '1':
+                self.tipo = 'temperatura'
+                self.unidade = '°C'
+            elif self.id == '2':
+                self.tipo = 'umidade'
+                self.unidade = '%'
+            elif self.id == '3':
+                self.tipo = 'CO2'
+                self.unidade = 'ppm'
+            print("\nO sensor de", self.tipo, "está marcando", self.valor, self.unidade, "\n")
+        elif(self.id == None):
+            print("\n\n")
+        elif(self.id == 'sair'):
+            exit()
         else:
-            print("Insira um sensor válido!")
+            print("\nInsira um sensor válido!\n")
 
     # apaga a tela executando um comando a depender do sistema operacional utilizado
     def apaga(self):
@@ -68,7 +77,7 @@ class Cliente(Componente):
         self.apaga()
         self.exibeSensor()
         print("1 - Sensor de Temperatura \n2 - Sensor de Umidade \n3 - Sensor de CO2\n")
-        self.id = input("Escreva o identificador de um sensor e pressione ENTER para ver o valor do mesmo\n")
+        self.id = input("Escreva o identificador de um sensor e pressione ENTER para ver o valor do mesmo\nEscreva *sair* e pressione ENTER para encerrar o gerenciador e sair do programa\n")
 
 
     
