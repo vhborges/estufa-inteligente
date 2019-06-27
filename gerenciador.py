@@ -4,21 +4,21 @@ from threading import Thread, Event
 from time import sleep
 
 class Gerenciador(Componente):
-    def __init__(self, nconexoes, host):
+    def __init__(self, nconexoes, host, limitesAquecedor, limitesResfriador, limitesUmidade, limitesCO2):
         self.nconexoes = nconexoes
         self.host = host
         self.temperatura = None
         self.umidade = None
         self.co2 = None
         #limiares de valores permitidos
-        self.tempMaxResfriador = 40
-        self.tempMinResfriador = 15
-        self.tempMaxAquecedor = 35
-        self.tempMinAquecedor = 10
-        self.umidadeMin = 20
-        self.umidadeMax = 50
-        self.CO2min = 390
-        self.CO2max = 410
+        self.tempMinAquecedor = limitesAquecedor[0]
+        self.tempMaxAquecedor = limitesAquecedor[1]
+        self.tempMinResfriador = limitesResfriador[0]
+        self.tempMaxResfriador = limitesResfriador[1]
+        self.umidadeMin = limitesUmidade[0]
+        self.umidadeMax = limitesUmidade[1]
+        self.CO2min = limitesCO2[0]
+        self.CO2max = limitesCO2[1]
         #sinaliza quando os atuadores devem ser ligados ou desligados
         self.ligaAquecedor = Event()
         self.desligaAquecedor = Event()

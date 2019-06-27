@@ -8,11 +8,11 @@ from decimal import Decimal
 class Sensor(Componente):
     def __init__(self, id, valorInicial, incrementoInicial, enderecoGerenciador):
         self.id = id
-        self.valor = valorInicial
+        self.valor = Decimal(str(valorInicial))
         self.incrementoValor = Decimal(str(incrementoInicial))
         self.enviando = False
         self.enderecoGerenciador = enderecoGerenciador
-        
+
     def iniciaThreads(self, valores, atualizandoValor):
         comunicador = Thread(target=self.processaSocket)
         atualizador = Thread(target=self.atualizaValor, args=(atualizandoValor, valores,))
@@ -62,10 +62,10 @@ class SensorTemperatura(Sensor):
         Sensor.__init__(self, id, temperaturaInicial, incrementoTemp, enderecoGerenciador)
 
 class SensorUmidade(Sensor):
-    def __init__(self, id, umidadeInicial, incrementoUmid, enderecoGerenciador):
-        Sensor.__init__(self, id, umidadeInicial, incrementoUmid, enderecoGerenciador)
+    def __init__(self, id, umidadeInicial, decrementoUmid, enderecoGerenciador):
+        Sensor.__init__(self, id, umidadeInicial, -decrementoUmid, enderecoGerenciador)
 
 
 class SensorCO2(Sensor):
-    def __init__(self, id, co2Inicial, incrementoCO2, enderecoGerenciador):
-        Sensor.__init__(self, id, co2Inicial, incrementoCO2, enderecoGerenciador)
+    def __init__(self, id, co2Inicial, decrementoCO2, enderecoGerenciador):
+        Sensor.__init__(self, id, co2Inicial, -decrementoCO2, enderecoGerenciador)

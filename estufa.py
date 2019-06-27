@@ -5,22 +5,25 @@ from cliente import Cliente
 from multiprocessing import SimpleQueue, Process, Lock, Event
 from threading import Thread#, Lock, Event
 
-if __name__ == "__main__":
+def main():
+    # obtenção de valores de configuração da estufa
+    temperatura, incrementoTemp, incrementoAquec, decrementoResf, umidade, decrementoUmid,\
+    incrementoIrrig, co2, decrementoCO2, incrementoInj = obtemValores()
+    limitesAquecedor, limitesResfriador, limitesUmidade, limitesCO2 = obtemLimites()
+
+    # porta utilizada nas comunicações entre componentes
     porta = 65000
     
     #declaração dos componentes
-    gerenciador = Gerenciador(nconexoes=8, host='127.0.0.1')
-    sensortemp = SensorTemperatura(id=1, temperaturaInicial=20, incrementoTemp=1,\
-                                   enderecoGerenciador=(gerenciador.host, porta,))
-    sensorumid = SensorUmidade(id=2, umidadeInicial=40, incrementoUmid=-1,\
-                               enderecoGerenciador=(gerenciador.host, porta,))
-    sensorco2 = SensorCO2(id=3, co2Inicial=400, incrementoCO2=-1,\
-                          enderecoGerenciador=(gerenciador.host, porta,))
-    aquecedor = Aquecedor(id=4, incrementoTemp=1.5, enderecoGerenciador=(gerenciador.host, porta,))
-    resfriador = Resfriador(id=5, decrementoTemp=1.5,enderecoGerenciador=(gerenciador.host, porta,))
-    irrigador = Irrigador(id=6, incrementoUmid=1.5,enderecoGerenciador=(gerenciador.host, porta,))
-    injetor = InjetorCO2(id=7, incrementoCO2=1.5,enderecoGerenciador=(gerenciador.host, porta,))
-    cliente = Cliente(enderecoGerenciador=(gerenciador.host, porta,))
+    gerenciador = Gerenciador(8, '127.0.0.1', limitesAquecedor, limitesResfriador, limitesUmidade, limitesCO2)
+    sensortemp = SensorTemperatura(1, temperatura, incrementoTemp, (gerenciador.host, porta,))
+    sensorumid = SensorUmidade(2, umidade, decrementoUmid, (gerenciador.host, porta,))
+    sensorco2 = SensorCO2(3, co2, decrementoCO2, (gerenciador.host, porta,))
+    aquecedor = Aquecedor(4, incrementoAquec, (gerenciador.host, porta,))
+    resfriador = Resfriador(5, decrementoResf, (gerenciador.host, porta,))
+    irrigador = Irrigador(6, incrementoIrrig, (gerenciador.host, porta,))
+    injetor = InjetorCO2(7, incrementoInj, (gerenciador.host, porta,))
+    cliente = Cliente((gerenciador.host, porta,))
 
     #valores dos parametros da estufa
     temperaturas = SimpleQueue()
@@ -73,3 +76,72 @@ if __name__ == "__main__":
     processoSensorCO2.terminate()
     processoInjetor.terminate()
     processoGerenciador.terminate()
+    
+def inputExcept(str):
+    while True:
+        try:
+            valor = float(input(str))
+        except ValueError:
+            print("Valor inválido!")
+            continue
+        break
+    return valor
+
+def inputLimites(str1, str2):
+    valor1 = inputExcept(str1)
+    valor2 = inputExcept(str2)
+    while valor1 > valor2:
+        print("Valor mínimo deve ser menor do que o máximo!")
+        valor1 = inputExcept(str1)
+        valor2 = inputExcept(str2)
+    return valor1, valor2
+
+def obtemValores():
+    temperatura = inputExcept("Digite o valor da temperatura inicial: ")
+    incrementoTemp = inputExcept("Digite o incremento da temperatura (positivo ou negativo): ")
+
+    incrementoAquec = inputExcept("Digite o incremento do aquecedor (apenas positivo): ")
+    while incrementoAquec < 0:
+        print("Incremento do aquecedor deve ser positivo!")
+        decrementoUmid = inputExcept("Digite o incremento do aquecedor: ")
+
+    decrementoResf = inputExcept("Digite o decremento do resfriador (apenas positivo): ")
+    while decrementoResf < 0:
+        print("Decremento do resfriador deve ser positivo!")
+        decrementoResf = inputExcept("Digite o decremento do resfriador: ")
+
+    umidade = inputExcept("Digite o valor da umidade inicial: ")
+    decrementoUmid = inputExcept("Digite o decremento da umidade (apenas positivo): ")
+    while decrementoUmid < 0:
+        print("Decremento da umidade deve ser positiva!")
+        decrementoUmid = inputExcept("Digite o decremento da umidade: ")
+    
+    incrementoIrrig = inputExcept("Digite o incremento do irrigador (apenas positivo): ")
+    while incrementoIrrig < 0:
+        print("Incremento do irrigador deve ser positivo!")
+        incrementoIrrig = inputExcept("Digite o incremento do irrigador: ")
+
+    co2 = inputExcept("Digite o valor do CO2 inicial: ")
+    decrementoCO2 = inputExcept("Digite o decremento do CO2 (apenas positivo): ")
+    while decrementoCO2 < 0:
+        print("Decremento do CO2 deve ser positivo!")
+        decrementoUmid = inputExcept("Digite o decremento do CO2: ")
+    
+    incrementoInj = inputExcept("Digite o incremento do injetor de CO2 (apenas positivo): ")
+    while incrementoInj < 0:
+        print("Incremento do injetor deve ser positivo!")
+        incrementoInj = inputExcept("Digite o incremento do injetor de CO2: ")
+    
+    return temperatura, incrementoTemp, incrementoAquec, decrementoResf,\
+    umidade, decrementoUmid, incrementoIrrig, co2, decrementoCO2, incrementoInj
+
+def obtemLimites():
+    tempMinAquecedor, tempMaxAquecedor = inputLimites("Digite o valor mínimo do aquecedor: ", "Digite o valor máximo do aquecedor: ")
+    tempMinResfriador, tempMaxResfriador = inputLimites("Digite o valor mínimo do resfriador: ", "Digite o valor máximo do resfriador: ")
+    umidadeMin, umidadeMax = inputLimites("Digite o valor mínimo da umidade: ", "Digite o valor máximo da umidade: ")
+    CO2min, CO2max = inputLimites("Digite o valor mínimo do CO2: ", "Digite o valor máximo do CO2: ")
+    return (tempMinAquecedor, tempMaxAquecedor), (tempMinResfriador, tempMaxResfriador), (umidadeMin, umidadeMax), (CO2min, CO2max)
+
+
+if __name__ == "__main__":
+    main()
