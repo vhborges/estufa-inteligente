@@ -11,11 +11,10 @@ class Componente(ABC):
         pass
 
     # gera o PDU da aplicação com cada campo separado por um caractere de espaço
-    def geraMensagem(self, tipo, id_mensagem, id_componente, valor=''):
-        if valor:
-            mensagem = ' '.join([tipo, id_mensagem, id_componente, valor])
-        else:
-            mensagem = ' '.join([tipo, id_mensagem, id_componente])
+    # sequencia ou valor podem não existir em algumas mensagens (default = None)
+    def geraMensagem(self, tipo, id_componente, sequencia=None, valor=None):
+        # mensagem = dados (válidos) separados por um caractere de espaço
+        mensagem = ' '.join(filter(None, [tipo, id_componente, sequencia, valor]))
         tamanho = len(mensagem)
         # pdu = tamanho de 2 bytes + resto da mensagem
         pdu = '{:02d}'.format(tamanho) + mensagem
@@ -32,9 +31,10 @@ class Componente(ABC):
         # convertendo para dicionario: melhor legibilidade
         dictDados = {
             'tipo' : listaDados[0],
-            'id_mensagem' : listaDados[1],
-            'id_componente' : listaDados[2]
+            'id_componente' : listaDados[1]
         }
+        if len(listaDados) > 2:
+            dictDados['sequencia'] = listaDados[2]
         if len(listaDados) == 4:
             dictDados['valor'] = listaDados[3]
         return dictDados

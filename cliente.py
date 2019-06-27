@@ -26,7 +26,7 @@ class Cliente(Componente):
             self.solicitaLeitura.wait()
             while self.ativo:
                 # solicita uma leitura ao gerenciador
-                mensagem = self.geraMensagem(tipo='LES', id_mensagem='0', id_componente=self.id)
+                mensagem = self.geraMensagem(tipo='LES', sequencia='0', id_componente=self.id)
                 conexao.sendall(mensagem)
                 # aguarda a resposta com o valor da leitura
                 mensagem = self.recebeMensagem(conexao)
@@ -35,7 +35,7 @@ class Cliente(Componente):
 
     def processaMensagem(self, mensagem):
         if (mensagem['tipo'] == 'LES'\
-        and mensagem['id_mensagem'] == '1'\
+        and mensagem['sequencia'] == '1'\
         and mensagem['id_componente'] == str(self.id)):
             self.valor = mensagem['valor']
             self.recebeLeitura.set()

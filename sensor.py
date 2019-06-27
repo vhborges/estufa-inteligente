@@ -34,7 +34,7 @@ class Sensor(Componente):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
             conexao.connect(self.enderecoGerenciador)
             # mensagem de identificação
-            mensagem = self.geraMensagem(tipo='IDS', id_mensagem='0', id_componente=str(self.id))
+            mensagem = self.geraMensagem(tipo='IDS', id_componente=str(self.id))
             conexao.sendall(mensagem)
 
             while True:
@@ -45,14 +45,14 @@ class Sensor(Componente):
                 
                 # envia o valor da leitura a cada 1s
                 while self.enviando:
-                    mensagem = self.geraMensagem(tipo='EVG', id_mensagem='1', id_componente=str(self.id), valor=str(self.valor))
+                    mensagem = self.geraMensagem(tipo='EVG', sequencia='1', id_componente=str(self.id), valor=str(self.valor))
                     conexao.sendall(mensagem)
                     sleep(1)
 
     def processaMensagem(self, mensagem):
         #processa uma mensagem pedido de envio da leitura dos dados de um sensor para o gerenciador
         if (mensagem['tipo'] == 'EVG'\
-        and mensagem['id_mensagem'] == '0'\
+        and mensagem['sequencia'] == '0'\
         and mensagem['id_componente'] == str(self.id)):
             self.enviando = True
     

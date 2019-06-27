@@ -52,17 +52,17 @@ class Gerenciador(Componente):
             # aguarda a sinalização de que o atuador deve ser ligado
             ligaAtuador.wait()
             # solicita acionamento do atuador
-            mensagem = self.geraMensagem(tipo='ACA', id_mensagem='0', id_componente=id_atuador)
+            mensagem = self.geraMensagem(tipo='ACA', id_componente=id_atuador)
             conexao.sendall(mensagem)
 
             # aguarda a sinalização de que o atuador deve ser desligado
             desligaAtuador.wait()
             # solicita desligamento do atuador
-            mensagem = self.geraMensagem(tipo='DEA', id_mensagem='0', id_componente=id_atuador)
+            mensagem = self.geraMensagem(tipo='DEA', id_componente=id_atuador)
             conexao.sendall(mensagem)
 
     def processaMensagem(self, mensagem, conexao):
-        if (mensagem['tipo'] == 'EVG' and mensagem['id_mensagem'] == '1'):
+        if (mensagem['tipo'] == 'EVG' and mensagem['sequencia'] == '1'):
             if mensagem['id_componente'] == '1':
                 self.temperatura = float(mensagem['valor'])
                 if self.temperatura <= self.tempMinAquecedor:
@@ -94,11 +94,11 @@ class Gerenciador(Componente):
                     self.desligaInjetor.set()
                     self.ligaInjetor.clear()
 
-        elif (mensagem['tipo'] == 'IDS' and mensagem['id_mensagem'] == '0'):
-            solicitaLeitura = self.geraMensagem(tipo='EVG', id_mensagem='0', id_componente=mensagem['id_componente'])
+        elif mensagem['tipo'] == 'IDS':
+            solicitaLeitura = self.geraMensagem(tipo='EVG', sequencia='0', id_componente=mensagem['id_componente'])
             conexao.sendall(solicitaLeitura)
         
-        elif (mensagem['tipo'] == 'IDA' and mensagem['id_mensagem'] == '0'):
+        elif mensagem['tipo'] == 'IDA':
             if mensagem['id_componente'] == '4':
                 self.processaAtuador(conexao, '4', self.ligaAquecedor, self.desligaAquecedor)
             elif mensagem['id_componente'] == '5':
@@ -108,7 +108,7 @@ class Gerenciador(Componente):
             elif mensagem['id_componente'] == '7':
                 self.processaAtuador(conexao, '7', self.ligaInjetor, self.desligaInjetor)
 
-        elif (mensagem['tipo'] == 'LES' and mensagem['id_mensagem'] == '0'):
+        elif (mensagem['tipo'] == 'LES' and mensagem['sequencia'] == '0'):
             valor = None
             if mensagem['id_componente'] == '1':
                 valor = self.temperatura
@@ -116,5 +116,5 @@ class Gerenciador(Componente):
                 valor = self.umidade
             elif mensagem['id_componente'] == '3':
                 valor = self.co2
-            retornaLeitura = self.geraMensagem(tipo='LES', id_mensagem='1', id_componente=mensagem['id_componente'], valor=str(valor))
+            retornaLeitura = self.geraMensagem(tipo='LES', sequencia='1', id_componente=mensagem['id_componente'], valor=str(valor))
             conexao.sendall(retornaLeitura)

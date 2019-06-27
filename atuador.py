@@ -35,7 +35,7 @@ class Atuador(Componente):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
             conexao.connect(self.enderecoGerenciador)
             # mensagem de identificação ao gerenciador
-            mensagem = self.geraMensagem(tipo='IDA', id_mensagem='0', id_componente=str(self.id))
+            mensagem = self.geraMensagem(tipo='IDA', id_componente=str(self.id))
             conexao.sendall(mensagem)
 
             # continuamente recebe mensagens do gerenciador (solicitação de atuação)
@@ -47,12 +47,10 @@ class Atuador(Componente):
     def processaMensagem(self, mensagem):
         #mensagem para ativar o atuador 
         if (mensagem['tipo'] == 'ACA'\
-        and mensagem['id_mensagem'] == '0'\
         and mensagem['id_componente'] == str(self.id)):
             self.ligado.set()
         #mensagem para desligar o atuador
         elif (mensagem['tipo'] == 'DEA'\
-        and mensagem['id_mensagem'] == '0'\
         and mensagem['id_componente'] == str(self.id)):
             self.ligado.clear()
 
