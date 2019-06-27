@@ -82,7 +82,7 @@ class Cliente(Componente):
             self.exibeSensor(id)
             print("1 - Sensor de Temperatura \n2 - Sensor de Umidade \n3 - Sensor de CO2\n")
             id = input("Escreva o identificador de um sensor e pressione ENTER para ver o valor do mesmo\n\
-                            Escreva *sair* e pressione ENTER para encerrar o gerenciador e sair do programa\n")
+                        Escreva *sair* e pressione ENTER para encerrar o gerenciador e sair do programa\n")
             if id in ('1', '2', '3'):
                 self.id = id
                 self.solicitaLeitura.set()

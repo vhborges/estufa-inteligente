@@ -43,10 +43,8 @@ class Gerenciador(Componente):
         serv.bind((self.host, porta))
         serv.listen(self.nconexoes)
         gerenciadorPronto.set()
-        print('aguardando conexões')
         while True:
-            conexao, cliente = serv.accept()
-            print('conectado por', cliente)
+            conexao = serv.accept()[0]
             Thread(target=self.processaConexao, args=(conexao,)).start()
         serv.close()
 
@@ -135,5 +133,5 @@ class Gerenciador(Componente):
                 valor = self.umidade
             elif mensagem['id_componente'] == '3':
                 valor = self.co2
-            retornaLeitura = self.geraMensagem(tipo='LES', id_mensagem='1', id_componente=mensagem['id_componente'], valor=valor)
+            retornaLeitura = self.geraMensagem(tipo='LES', id_mensagem='1', id_componente=mensagem['id_componente'], valor=str(valor))
             conexao.sendall(retornaLeitura)

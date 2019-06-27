@@ -3,7 +3,7 @@ from sensor import SensorCO2, SensorTemperatura, SensorUmidade
 from atuador import Atuador, Aquecedor, Resfriador, Irrigador, InjetorCO2
 from cliente import Cliente
 from multiprocessing import SimpleQueue, Process, Lock, Event
-#from threading import Thread, Lock, Event
+from threading import Thread#, Lock, Event
 
 if __name__ == "__main__":
     porta = 65000
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     processoResfriador = Process(target=resfriador.iniciaThreads, args=(temperaturas, atualizandoTemp,))
     processoIrrigador = Process(target=irrigador.iniciaThreads, args=(umidades, atualizandoUmid,))
     processoInjetor = Process(target=injetor.iniciaThreads, args=(co2, atualizandoCO2,))
-    processoCliente = Process(target=cliente.iniciaThreads)
+    processoCliente = Thread(target=cliente.iniciaThreads)
 
     #inicia o gerenciador e aguarda até que ele esteja pronto para receber conexões
     processoGerenciador.start()
