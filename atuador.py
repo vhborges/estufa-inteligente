@@ -8,85 +8,55 @@ from threading import Thread, Event
 class Atuador(Componente):
     def __init__(self, id, incremento, enderecoGerenciador):
         self.id = id
+        self.ativo = True
         self.enderecoGerenciador = enderecoGerenciador
         self.incremento = Decimal(str(incremento))
+        self.ligado = Event()
 
     def iniciaThreads(self, valores, atualizando):
-        conectado = Event()
-        ligado = Event()
-
-        atuador = Thread(target=self.atuacao, args=(valores, atualizando, conectado, ligado, ))
-        comunicador = Thread(target=self.processaSocket, args=(conectado, ligado, ))
+        atuador = Thread(target=self.atuacao, args=(valores, atualizando,))
+        comunicador = Thread(target=self.processaSocket)
 
         atuador.start()
         comunicador.start()
 
-        atuador.join()
-        comunicador.join()
-
     #atuacao do atuador (incrementa ou decrementa os valores, a depender das classes filhas)
-    def atuacao(self, valores, atualizando, conectado, ligado):
-        conectado.wait()
-        while conectado.is_set():
-            ligado.wait()
-            while ligado.is_set():
+    def atuacao(self, valores, atualizando):
+        self.ligado.wait()
+        while self.ativo:
+            while self.ligado.is_set():
                 with atualizando:
                     tempAtual = valores.get()
                     valores.put(tempAtual + self.incremento) 
                 sleep(0.5)
+            self.ligado.wait()
 
-    def processaSocket(self, conectado, ligado):
+    def processaSocket(self):
         # estabelece um socket para se comunicar com o servidor através do protocolo TCP/IP
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
             conexao.connect(self.enderecoGerenciador)
-            # mensagem de conexão
-            mensagem = self.geraMensagem(tipo='COA', id_mensagem='0', id_componente=str(self.id))
+            # mensagem de identificação ao gerenciador
+            mensagem = self.geraMensagem(tipo='IDA', id_mensagem='0', id_componente=str(self.id))
             conexao.sendall(mensagem)
 
-            # aguarda uma confirmação de conexão do atuador ao gerenciador
-            while not conectado.is_set():
+            # continuamente recebe mensagens do gerenciador (solicitação de atuação)
+            while self.ativo:
+                #TODO quando o gerenciador desconectar deve-se fazer self.ativo = False e depois ligado.set()
                 resposta = self.recebeMensagem(conexao)
-                self.processaMensagem(resposta, conexao, conectado, ligado)
-                
-            while conectado.is_set():
-                # aguarda uma solicitação, pelo gerenciador, para ligar o atuador
-                while not ligado.is_set():
-                    resposta = self.recebeMensagem(conexao)
-                    self.processaMensagem(resposta, conexao, conectado, ligado)
-                # atuador atuando
-                while ligado.is_set():
-                    resposta = self.recebeMensagem(conexao)
-                    self.processaMensagem(resposta, conexao, conectado, ligado)
+                self.processaMensagem(resposta)
                 
 
-    def processaMensagem(self, resposta, conexao, conectado, ligado):
-        #mensagem para conectar o atuador
-        if (resposta['tipo'] == 'COA'\
-            and resposta['id_mensagem'] == '1'\
-            and resposta['id_componente'] == str(self.id)):
-            conectado.set() 
-        ##mensagem para ativar o atuador 
-        elif (resposta['tipo'] == 'ACA'\
-                and resposta['id_mensagem'] == '0'\
-                and resposta['id_componente'] == str(self.id)):
-            ligado.set()
-            mensagem = self.geraMensagem(tipo='ACA', id_mensagem='1', id_componente=str(self.id))
-            conexao.sendall(mensagem)
-        ##mensagem para desligar o atuador
-        elif (resposta['tipo'] == 'DEA'\
-                and resposta['id_mensagem'] == '0'\
-                and resposta['id_componente'] == str(self.id)):
-            ligado.clear()
-            mensagem = self.geraMensagem(tipo='DEA', id_mensagem='1', id_componente=str(self.id))
-            conexao.sendall(mensagem)  
-        #mensagem para desconectar o atuador
-        elif (resposta['tipo'] == 'DCA'\
-                and resposta['id_mensagem'] == '0'\
-                and resposta['id_componente'] == str(self.id)):
-            ligado.clear() 
-            conectado.clear()
-            mensagem = self.geraMensagem(tipo='DCA', id_mensagem='1', id_componente=str(self.id))
-            conexao.sendall(mensagem)
+    def processaMensagem(self, mensagem):
+        #mensagem para ativar o atuador 
+        if (mensagem['tipo'] == 'ACA'\
+        and mensagem['id_mensagem'] == '0'\
+        and mensagem['id_componente'] == str(self.id)):
+            self.ligado.set()
+        #mensagem para desligar o atuador
+        elif (mensagem['tipo'] == 'DEA'\
+        and mensagem['id_mensagem'] == '0'\
+        and mensagem['id_componente'] == str(self.id)):
+            self.ligado.clear()
 
 
 class Resfriador(Atuador):
