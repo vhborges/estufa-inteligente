@@ -1,6 +1,7 @@
 from gerenciador import Gerenciador
 from sensor import SensorCO2, SensorTemperatura, SensorUmidade
 from atuador import Atuador, Aquecedor, Resfriador, Irrigador, InjetorCO2
+from cliente import Cliente
 from multiprocessing import SimpleQueue, Process, Lock, Event
 #from threading import Thread, Lock, Event
 
@@ -19,6 +20,7 @@ if __name__ == "__main__":
     resfriador = Resfriador(id=5, decrementoTemp=1.5,enderecoGerenciador=(gerenciador.host, porta,))
     irrigador = Irrigador(id=6, incrementoUmid=1.5,enderecoGerenciador=(gerenciador.host, porta,))
     injetor = InjetorCO2(id=7, incrementoCO2=1.5,enderecoGerenciador=(gerenciador.host, porta,))
+    cliente = Cliente(enderecoGerenciador=(gerenciador.host, porta,))
 
     #valores dos parametros da estufa
     temperaturas = SimpleQueue()
@@ -34,7 +36,7 @@ if __name__ == "__main__":
     gerenciadorPronto = Event()
 
     #declaração dos processos
-    processoGerenciador = Process(target=gerenciador.iniciaThreads, args=(porta, gerenciadorPronto,))
+    processoGerenciador = Process(target=gerenciador.processaSocket, args=(porta, gerenciadorPronto,))
     processoSensorTemp = Process(target=sensortemp.iniciaThreads, args=(temperaturas, atualizandoTemp,))
     processoSensorUmid = Process(target=sensorumid.iniciaThreads, args=(umidades, atualizandoUmid,))
     processoSensorCO2 = Process(target=sensorco2.iniciaThreads, args=(co2, atualizandoCO2,))
@@ -42,6 +44,7 @@ if __name__ == "__main__":
     processoResfriador = Process(target=resfriador.iniciaThreads, args=(temperaturas, atualizandoTemp,))
     processoIrrigador = Process(target=irrigador.iniciaThreads, args=(umidades, atualizandoUmid,))
     processoInjetor = Process(target=injetor.iniciaThreads, args=(co2, atualizandoCO2,))
+    processoCliente = Process(target=cliente.iniciaThreads)
 
     #inicia o gerenciador e aguarda até que ele esteja pronto para receber conexões
     processoGerenciador.start()
@@ -55,3 +58,4 @@ if __name__ == "__main__":
     processoResfriador.start()
     processoIrrigador.start()
     processoInjetor.start()
+    processoCliente.start()

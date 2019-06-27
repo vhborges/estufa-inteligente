@@ -30,11 +30,11 @@ class Gerenciador(Componente):
         self.ligaInjetor = Event()
         self.desligaInjetor = Event()
     
-    def iniciaThreads(self, porta, gerenciadorPronto):
-        #inicia a thread do gerenciador
-        Thread(target=self.processaSocket, args=(porta, gerenciadorPronto,)).start()
-        
-        Thread(target=self.processaCliente).start()
+    #def iniciaThreads(self, porta, gerenciadorPronto):
+    #    #inicia a thread do gerenciador
+    #    Thread(target=self.processaSocket, args=(porta, gerenciadorPronto,)).start()
+    #    
+    #    Thread(target=self.processaCliente).start()
     
     #processa o socket que receberá conexões dos outros componentes
     def processaSocket(self, porta, gerenciadorPronto):
@@ -70,12 +70,12 @@ class Gerenciador(Componente):
             mensagem = self.geraMensagem(tipo='DEA', id_mensagem='0', id_componente=id_atuador)
             conexao.sendall(mensagem)
 
-    def processaCliente(self):
-        while self.ativo:
-            sleep(2)
-            print('Temperatura:', self.temperatura)
-            print('Umidade:', self.umidade)
-            print('CO2:', self.co2)
+    #def processaCliente(self):
+    #    while self.ativo:
+    #        sleep(2)
+    #        print('Temperatura:', self.temperatura)
+    #        print('Umidade:', self.umidade)
+    #        print('CO2:', self.co2)
     
     def processaMensagem(self, mensagem, conexao):
         if (mensagem['tipo'] == 'EVG' and mensagem['id_mensagem'] == '1'):
@@ -135,5 +135,5 @@ class Gerenciador(Componente):
                 valor = self.umidade
             elif mensagem['id_componente'] == '3':
                 valor = self.co2
-            retornaLeitura = self.geraMensagem(tipo='LES', id_mensagem='1', id_componente='8', valor=valor)
+            retornaLeitura = self.geraMensagem(tipo='LES', id_mensagem='1', id_componente=mensagem['id_componente'], valor=valor)
             conexao.sendall(retornaLeitura)
