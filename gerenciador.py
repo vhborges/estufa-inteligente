@@ -134,5 +134,5 @@ class Gerenciador(Componente):
                 valor = self.umidade
             elif mensagem['id_componente'] == '3':
                 valor = self.co2
-            retornaLeitura = self.geraMensagem(tipo='LES', id_mensagem='1', id_componente=8, valor=valor)
+            retornaLeitura = self.geraMensagem(tipo='LES', id_mensagem='1', id_componente='8', valor=valor)
             conexao.sendall(retornaLeitura)
