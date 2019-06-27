@@ -8,7 +8,6 @@ from threading import Thread, Event
 class Atuador(Componente):
     def __init__(self, id, incremento, enderecoGerenciador):
         self.id = id
-        self.ativo = True
         self.enderecoGerenciador = enderecoGerenciador
         self.incremento = Decimal(str(incremento))
         self.ligado = Event()
@@ -23,7 +22,7 @@ class Atuador(Componente):
     #atuacao do atuador (incrementa ou decrementa os valores, a depender das classes filhas)
     def atuacao(self, valores, atualizando):
         self.ligado.wait()
-        while self.ativo:
+        while True:
             while self.ligado.is_set():
                 with atualizando:
                     tempAtual = valores.get()
@@ -40,8 +39,7 @@ class Atuador(Componente):
             conexao.sendall(mensagem)
 
             # continuamente recebe mensagens do gerenciador (solicitação de atuação)
-            while self.ativo:
-                #TODO quando o gerenciador desconectar deve-se fazer self.ativo = False e depois ligado.set()
+            while True:
                 resposta = self.recebeMensagem(conexao)
                 self.processaMensagem(resposta)
                 

@@ -34,6 +34,8 @@ if __name__ == "__main__":
 
     #permite iniciar os componentes somente quando o gerenciador (servidor) estiver pronto
     gerenciadorPronto = Event()
+    
+    encerraApp = Event()
 
     #declaração dos processos
     processoGerenciador = Process(target=gerenciador.processaSocket, args=(porta, gerenciadorPronto,))
@@ -44,7 +46,7 @@ if __name__ == "__main__":
     processoResfriador = Process(target=resfriador.iniciaThreads, args=(temperaturas, atualizandoTemp,))
     processoIrrigador = Process(target=irrigador.iniciaThreads, args=(umidades, atualizandoUmid,))
     processoInjetor = Process(target=injetor.iniciaThreads, args=(co2, atualizandoCO2,))
-    processoCliente = Thread(target=cliente.iniciaThreads)
+    threadCliente = Thread(target=cliente.iniciaThreads, args=(encerraApp,))
 
     #inicia o gerenciador e aguarda até que ele esteja pronto para receber conexões
     processoGerenciador.start()
@@ -58,4 +60,16 @@ if __name__ == "__main__":
     processoResfriador.start()
     processoIrrigador.start()
     processoInjetor.start()
-    processoCliente.start()
+    threadCliente.start()
+
+    # aguarda a sinalização de encerrar a aplicação
+    encerraApp.wait()
+    # finaliza os processos
+    processoSensorTemp.terminate()
+    processoAquecedor.terminate()
+    processoResfriador.terminate()
+    processoSensorUmid.terminate()
+    processoIrrigador.terminate()
+    processoSensorCO2.terminate()
+    processoInjetor.terminate()
+    processoGerenciador.terminate()

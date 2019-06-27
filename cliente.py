@@ -8,15 +8,13 @@ class Cliente(Componente):
         self.enderecoGerenciador = enderecoGerenciador
         self.id = None
         self.valor = None
-        self.tipo = None
-        self.unidade = None
         self.ativo = True
         self.solicitaLeitura = Event()
         self.recebeLeitura = Event()
 
-    def iniciaThreads(self):
+    def iniciaThreads(self, encerraApp):
         comunicador = Thread(target=self.processaSocket)
-        inputUsuario = Thread(target=self.recebeSensor)
+        inputUsuario = Thread(target=self.recebeSensor, args=(encerraApp,))
 
         comunicador.start()
         inputUsuario.start()
@@ -25,14 +23,15 @@ class Cliente(Componente):
         # estabelece um socket para se comunicar com o servidor através do protocolo TCP/IP
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
             conexao.connect(self.enderecoGerenciador)
+            self.solicitaLeitura.wait()
             while self.ativo:
-                self.solicitaLeitura.wait()
                 # solicita uma leitura ao gerenciador
                 mensagem = self.geraMensagem(tipo='LES', id_mensagem='0', id_componente=self.id)
                 conexao.sendall(mensagem)
                 # aguarda a resposta com o valor da leitura
                 mensagem = self.recebeMensagem(conexao)
                 self.processaMensagem(mensagem)
+                self.solicitaLeitura.wait()
 
     def processaMensagem(self, mensagem):
         if (mensagem['tipo'] == 'LES'\
@@ -43,7 +42,7 @@ class Cliente(Componente):
             self.solicitaLeitura.clear()
             self.recebeLeitura.clear()
 
-    def exibeSensor(self, id):
+    def exibeSensor(self, id, encerraApp):
         self.apaga()
         if(id == ''):
             id = None
@@ -62,6 +61,9 @@ class Cliente(Componente):
         elif(id == None):
             print("\n\n")
         elif(id == 'sair'):
+            self.ativo = False
+            self.solicitaLeitura.set()
+            encerraApp.set()
             exit()
         else:
             print("\nInsira um sensor válido!\n")
@@ -75,14 +77,13 @@ class Cliente(Componente):
         else:
             os.system('clear')
 
-    def recebeSensor(self):
+    def recebeSensor(self, encerraApp):
         id = None
         while self.ativo:
             self.apaga()
-            self.exibeSensor(id)
+            self.exibeSensor(id, encerraApp)
             print("1 - Sensor de Temperatura \n2 - Sensor de Umidade \n3 - Sensor de CO2\n")
-            id = input("Escreva o identificador de um sensor e pressione ENTER para ver o valor do mesmo\n\
-                        Escreva *sair* e pressione ENTER para encerrar o gerenciador e sair do programa\n")
+            id = input("Escreva o identificador de um sensor e pressione ENTER para ver o valor do mesmo\nEscreva *sair* e pressione ENTER para encerrar o gerenciador e sair do programa\n")
             if id in ('1', '2', '3'):
                 self.id = id
                 self.solicitaLeitura.set()

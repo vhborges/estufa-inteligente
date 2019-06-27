@@ -7,7 +7,6 @@ class Gerenciador(Componente):
     def __init__(self, nconexoes, host):
         self.nconexoes = nconexoes
         self.host = host
-        self.ativo = True
         self.temperatura = None
         self.umidade = None
         self.co2 = None
@@ -30,12 +29,6 @@ class Gerenciador(Componente):
         self.ligaInjetor = Event()
         self.desligaInjetor = Event()
     
-    #def iniciaThreads(self, porta, gerenciadorPronto):
-    #    #inicia a thread do gerenciador
-    #    Thread(target=self.processaSocket, args=(porta, gerenciadorPronto,)).start()
-    #    
-    #    Thread(target=self.processaCliente).start()
-    
     #processa o socket que receberá conexões dos outros componentes
     def processaSocket(self, porta, gerenciadorPronto):
         serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -50,12 +43,12 @@ class Gerenciador(Componente):
 
     def processaConexao(self, conexao):
         with conexao:
-            while self.ativo:
+            while True:
                 mensagem = self.recebeMensagem(conexao)
                 self.processaMensagem(mensagem, conexao)
                 
     def processaAtuador(self, conexao, id_atuador, ligaAtuador, desligaAtuador):
-        while self.ativo:
+        while True:
             # aguarda a sinalização de que o atuador deve ser ligado
             ligaAtuador.wait()
             # solicita acionamento do atuador
@@ -68,13 +61,6 @@ class Gerenciador(Componente):
             mensagem = self.geraMensagem(tipo='DEA', id_mensagem='0', id_componente=id_atuador)
             conexao.sendall(mensagem)
 
-    #def processaCliente(self):
-    #    while self.ativo:
-    #        sleep(2)
-    #        print('Temperatura:', self.temperatura)
-    #        print('Umidade:', self.umidade)
-    #        print('CO2:', self.co2)
-    
     def processaMensagem(self, mensagem, conexao):
         if (mensagem['tipo'] == 'EVG' and mensagem['id_mensagem'] == '1'):
             if mensagem['id_componente'] == '1':
@@ -111,9 +97,6 @@ class Gerenciador(Componente):
         elif (mensagem['tipo'] == 'IDS' and mensagem['id_mensagem'] == '0'):
             solicitaLeitura = self.geraMensagem(tipo='EVG', id_mensagem='0', id_componente=mensagem['id_componente'])
             conexao.sendall(solicitaLeitura)
-        
-        elif (mensagem['tipo'] == 'DEG' and mensagem['id_mensagem'] == '0' and mensagem['id_componente'] == '8'):
-            self.ativo = False
         
         elif (mensagem['tipo'] == 'IDA' and mensagem['id_mensagem'] == '0'):
             if mensagem['id_componente'] == '4':

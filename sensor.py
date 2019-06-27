@@ -10,7 +10,6 @@ class Sensor(Componente):
         self.id = id
         self.valor = valorInicial
         self.incrementoValor = Decimal(str(incrementoInicial))
-        self.ativo = True
         self.enviando = False
         self.enderecoGerenciador = enderecoGerenciador
         
@@ -23,7 +22,7 @@ class Sensor(Componente):
 
     #atualiza o valor (temperatura, pressão e umidade) sendo lido pelos sensores
     def atualizaValor(self, atualizandoValor, valores):
-        while self.ativo:
+        while True:
             with atualizandoValor:
                 if not valores.empty():
                     self.valor = valores.get() + self.incrementoValor
@@ -38,7 +37,7 @@ class Sensor(Componente):
             mensagem = self.geraMensagem(tipo='IDS', id_mensagem='0', id_componente=str(self.id))
             conexao.sendall(mensagem)
 
-            while self.ativo:
+            while True:
                 # aguarda uma solicitação, pelo gerenciador, de envio dos dados
                 while not self.enviando:
                     resposta = self.recebeMensagem(conexao)
