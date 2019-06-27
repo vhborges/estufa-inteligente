@@ -7,9 +7,18 @@ from threading import Thread
 
 def main():
     # obtenção de valores de configuração da estufa
-    temperatura, incrementoTemp, incrementoAquec, decrementoResf, umidade, decrementoUmid,\
-    incrementoIrrig, co2, decrementoCO2, incrementoInj = obtemValores()
+    incrementoTemp = obtemValores()
     limitesAquecedor, limitesResfriador, limitesUmidade, limitesCO2 = obtemLimites()
+    #valores iniciais dos parâmetros da estufa
+    temperatura = 30
+    umidade = 35
+    decrementoUmid = 0.7
+    co2 = 400
+    decrementoCO2 = 0.8
+    incrementoAquec = 1.5
+    decrementoResf = 1.5
+    incrementoIrrig = 1.5
+    incrementoInj = 1.5
 
     # porta utilizada nas comunicações entre componentes
     porta = 65000
@@ -99,49 +108,29 @@ def inputLimites(str1, str2):
     return valor1, valor2
 
 def obtemValores():
-    temperatura = inputExcept("Digite o valor da temperatura inicial: ")
-    incrementoTemp = inputExcept("Digite o incremento da temperatura (positivo ou negativo): ")
-
-    incrementoAquec = inputExcept("Digite o incremento do aquecedor (apenas positivo): ")
-    while incrementoAquec < 0:
-        print("Incremento do aquecedor deve ser positivo!")
-        decrementoUmid = inputExcept("Digite o incremento do aquecedor: ")
-
-    decrementoResf = inputExcept("Digite o decremento do resfriador (apenas positivo): ")
-    while decrementoResf < 0:
-        print("Decremento do resfriador deve ser positivo!")
-        decrementoResf = inputExcept("Digite o decremento do resfriador: ")
-
-    umidade = inputExcept("Digite o valor da umidade inicial: ")
-    decrementoUmid = inputExcept("Digite o decremento da umidade (apenas positivo): ")
-    while decrementoUmid < 0:
-        print("Decremento da umidade deve ser positiva!")
-        decrementoUmid = inputExcept("Digite o decremento da umidade: ")
     
-    incrementoIrrig = inputExcept("Digite o incremento do irrigador (apenas positivo): ")
-    while incrementoIrrig < 0:
-        print("Incremento do irrigador deve ser positivo!")
-        incrementoIrrig = inputExcept("Digite o incremento do irrigador: ")
-
-    co2 = inputExcept("Digite o valor do CO2 inicial: ")
-    decrementoCO2 = inputExcept("Digite o decremento do CO2 (apenas positivo): ")
-    while decrementoCO2 < 0:
-        print("Decremento do CO2 deve ser positivo!")
-        decrementoUmid = inputExcept("Digite o decremento do CO2: ")
+    incrementoTemp = inputExcept("Digite o incremento da temperatura (entre -0.9 e 0.9): ")
+    while not -0.9 <= incrementoTemp <= 0.9:
+        print("Coloque um valor dentro da faixa especificada!")
+        incrementoTemp = inputExcept("Digite o incremento da temperatura (entre -0.9 e 0.9): ")
     
-    incrementoInj = inputExcept("Digite o incremento do injetor de CO2 (apenas positivo): ")
-    while incrementoInj < 0:
-        print("Incremento do injetor deve ser positivo!")
-        incrementoInj = inputExcept("Digite o incremento do injetor de CO2: ")
-    
-    return temperatura, incrementoTemp, incrementoAquec, decrementoResf,\
-    umidade, decrementoUmid, incrementoIrrig, co2, decrementoCO2, incrementoInj
+    return incrementoTemp
 
 def obtemLimites():
-    tempMinAquecedor, tempMaxAquecedor = inputLimites("Digite o valor mínimo do aquecedor: ", "Digite o valor máximo do aquecedor: ")
-    tempMinResfriador, tempMaxResfriador = inputLimites("Digite o valor mínimo do resfriador: ", "Digite o valor máximo do resfriador: ")
-    umidadeMin, umidadeMax = inputLimites("Digite o valor mínimo da umidade: ", "Digite o valor máximo da umidade: ")
-    CO2min, CO2max = inputLimites("Digite o valor mínimo do CO2: ", "Digite o valor máximo do CO2: ")
+    print(("\nCONFIGURAÇÃO DO AQUECEDOR E RESFRIADOR\n"\
+            "Valor máximo do aquecedor deve ser menor que o máximo do resfriador\n"\
+            "Valor mínimo do aquecedor deve ser menor que o mínimo do resfriador"))
+    tempMinAquecedor, tempMaxAquecedor = inputLimites("Digite o valor mínimo do aquecedor (recomendado = 10): ", "Digite o valor máximo do aquecedor (recomendado = 35): ")
+    tempMinResfriador, tempMaxResfriador = inputLimites("Digite o valor mínimo do resfriador (recomendado = 15): ", "Digite o valor máximo do resfriador (recomendado = 40): ")
+    while tempMinAquecedor >= tempMinResfriador or tempMaxAquecedor >= tempMaxResfriador:
+        print("Os valores máximo e mínimo devem ser como especificados anteriormente!")
+        tempMinAquecedor, tempMaxAquecedor = inputLimites("Digite o valor mínimo do aquecedor (recomendado = 10): ", "Digite o valor máximo do aquecedor (recomendado = 35): ")
+        tempMinResfriador, tempMaxResfriador = inputLimites("Digite o valor mínimo do resfriador (recomendado = 15): ", "Digite o valor máximo do resfriador (recomendado = 40): ")
+
+    print("\nCONFIGURAÇÃO DO IRRIGADOR")
+    umidadeMin, umidadeMax = inputLimites("Digite o valor mínimo da umidade (recomendado = 20): ", "Digite o valor máximo da umidade (recomendado = 50): ")
+    print("\nCONFIGURAÇÃO DO INJETOR DE CO2")
+    CO2min, CO2max = inputLimites("Digite o valor mínimo do CO2 (recomendado = 390): ", "Digite o valor máximo do CO2 (recomendado = 410): ")
     return (tempMinAquecedor, tempMaxAquecedor), (tempMinResfriador, tempMaxResfriador), (umidadeMin, umidadeMax), (CO2min, CO2max)
 
 
