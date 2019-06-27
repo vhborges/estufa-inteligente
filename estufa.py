@@ -1,7 +1,7 @@
 from gerenciador import Gerenciador
 from sensor import SensorCO2, SensorTemperatura, SensorUmidade
 from atuador import Atuador, Aquecedor, Resfriador, Irrigador, InjetorCO2
-from multiprocessing import Queue, Process, Lock, Event
+from multiprocessing import SimpleQueue, Process, Lock, Event
 #from threading import Thread, Lock, Event
 
 if __name__ == "__main__":
@@ -21,9 +21,9 @@ if __name__ == "__main__":
     injetor = InjetorCO2(id=7, incrementoCO2=1.5,enderecoGerenciador=(gerenciador.host, porta,))
 
     #valores dos parametros da estufa
-    temperaturas = Queue()
-    umidades = Queue()
-    co2 = Queue()
+    temperaturas = SimpleQueue()
+    umidades = SimpleQueue()
+    co2 = SimpleQueue()
 
     #locks para garantir a correta atualização dos valores entre processos
     atualizandoTemp = Lock()

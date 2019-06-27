@@ -31,9 +31,10 @@ class Gerenciador(Componente):
         self.desligaInjetor = Event()
     
     def iniciaThreads(self, porta, gerenciadorPronto):
-        Thread(target=self.processaCliente).start()
         #inicia a thread do gerenciador
         Thread(target=self.processaSocket, args=(porta, gerenciadorPronto,)).start()
+        
+        Thread(target=self.processaCliente).start()
     
     #processa o socket que receberá conexões dos outros componentes
     def processaSocket(self, porta, gerenciadorPronto):

@@ -15,11 +15,11 @@ class Sensor(Componente):
         self.enderecoGerenciador = enderecoGerenciador
         
     def iniciaThreads(self, valores, atualizandoValor):
-        atualizador = Thread(target=self.atualizaValor, args=(atualizandoValor, valores,))
         comunicador = Thread(target=self.processaSocket)
+        atualizador = Thread(target=self.atualizaValor, args=(atualizandoValor, valores,))
 
-        atualizador.start()
         comunicador.start()
+        atualizador.start()
 
     #atualiza o valor (temperatura, pressão e umidade) sendo lido pelos sensores
     def atualizaValor(self, atualizandoValor, valores):

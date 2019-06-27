@@ -14,11 +14,11 @@ class Atuador(Componente):
         self.ligado = Event()
 
     def iniciaThreads(self, valores, atualizando):
-        atuador = Thread(target=self.atuacao, args=(valores, atualizando,))
         comunicador = Thread(target=self.processaSocket)
+        atuador = Thread(target=self.atuacao, args=(valores, atualizando,))
 
-        atuador.start()
         comunicador.start()
+        atuador.start()
 
     #atuacao do atuador (incrementa ou decrementa os valores, a depender das classes filhas)
     def atuacao(self, valores, atualizando):
