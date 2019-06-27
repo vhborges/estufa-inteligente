@@ -2,7 +2,6 @@ import socket
 from decimal import Decimal
 from time import sleep
 from componente import Componente
-from abc import ABC, abstractmethod
 from threading import Thread, Event
 
 class Atuador(Componente):
@@ -19,7 +18,7 @@ class Atuador(Componente):
         comunicador.start()
         atuador.start()
 
-    #atuacao do atuador (incrementa ou decrementa os valores, a depender das classes filhas)
+    #incrementa ou decrementa os valores a cada meio segundo, a depender do tipo do atuador (classes filhas)
     def atuacao(self, valores, atualizando):
         self.ligado.wait()
         while True:
@@ -31,7 +30,7 @@ class Atuador(Componente):
             self.ligado.wait()
 
     def processaSocket(self):
-        # estabelece um socket para se comunicar com o servidor através do protocolo TCP/IP
+        # estabelece um socket para se comunicar com o gerenciador através do protocolo TCP/IP
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
             conexao.connect(self.enderecoGerenciador)
             # mensagem de identificação ao gerenciador
@@ -44,6 +43,7 @@ class Atuador(Componente):
                 self.processaMensagem(resposta)
                 
 
+    # processa as mensagens recebidas do gerenciador
     def processaMensagem(self, mensagem):
         #mensagem para ativar o atuador 
         if (mensagem['tipo'] == 'ACA'\

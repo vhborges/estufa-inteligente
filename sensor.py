@@ -1,15 +1,14 @@
-#from abc import ABC, abstractmethod
 from componente import Componente
 import socket
 from time import sleep
-from threading import Thread, Event
+from threading import Thread
 from decimal import Decimal
 
 class Sensor(Componente):
-    def __init__(self, id, valorInicial, incrementoInicial, enderecoGerenciador):
+    def __init__(self, id, valorInicial, incremento, enderecoGerenciador):
         self.id = id
         self.valor = Decimal(str(valorInicial))
-        self.incrementoValor = Decimal(str(incrementoInicial))
+        self.incrementoValor = Decimal(str(incremento))
         self.enviando = False
         self.enderecoGerenciador = enderecoGerenciador
 
@@ -50,7 +49,7 @@ class Sensor(Componente):
                     sleep(1)
 
     def processaMensagem(self, mensagem):
-        #processa uma mensagem pedido de envio da leitura dos dados de um sensor para o gerenciador
+        # pedido de envio da leitura dos dados de um sensor para o gerenciador
         if (mensagem['tipo'] == 'EVG'\
         and mensagem['sequencia'] == '0'\
         and mensagem['id_componente'] == str(self.id)):

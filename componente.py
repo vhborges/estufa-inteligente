@@ -39,8 +39,10 @@ class Componente(ABC):
             dictDados['valor'] = listaDados[3]
         return dictDados
     
+    # conexão somente aceita bytestrings
     def codificaMensagem(self, mensagem):
         return mensagem.encode('ascii')
     
+    # retorna ao formato padrão de string
     def decodificaMensagem(self, mensagem):
         return mensagem.decode('ascii')

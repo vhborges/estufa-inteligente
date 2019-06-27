@@ -8,7 +8,9 @@ class Cliente(Componente):
         self.enderecoGerenciador = enderecoGerenciador
         self.id = None
         self.valor = None
+        #indica se o cliente está ativo... será False quando o usuário digitar 'sair'
         self.ativo = True
+        #permitem sincronizar as leituras entre as threads 'comunicador' e 'inputUsuario'
         self.solicitaLeitura = Event()
         self.recebeLeitura = Event()
 
@@ -20,9 +22,10 @@ class Cliente(Componente):
         inputUsuario.start()
 
     def processaSocket(self):
-        # estabelece um socket para se comunicar com o servidor através do protocolo TCP/IP
+        # estabelece um socket para se comunicar com o gerenciador através do protocolo TCP/IP
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
             conexao.connect(self.enderecoGerenciador)
+            # aguarda a primeira solicitação de leitura
             self.solicitaLeitura.wait()
             while self.ativo:
                 # solicita uma leitura ao gerenciador
@@ -31,6 +34,7 @@ class Cliente(Componente):
                 # aguarda a resposta com o valor da leitura
                 mensagem = self.recebeMensagem(conexao)
                 self.processaMensagem(mensagem)
+                # aguarda nova solicitação de leitura
                 self.solicitaLeitura.wait()
 
     def processaMensagem(self, mensagem):
@@ -77,6 +81,7 @@ class Cliente(Componente):
         else:
             os.system('clear')
 
+    # recebe do usuário o id do sensor a ser lido
     def recebeSensor(self, encerraApp):
         id = None
         while self.ativo:

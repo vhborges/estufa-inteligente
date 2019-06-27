@@ -3,7 +3,7 @@ from sensor import SensorCO2, SensorTemperatura, SensorUmidade
 from atuador import Atuador, Aquecedor, Resfriador, Irrigador, InjetorCO2
 from cliente import Cliente
 from multiprocessing import SimpleQueue, Process, Lock, Event
-from threading import Thread#, Lock, Event
+from threading import Thread
 
 def main():
     # obtenção de valores de configuração da estufa
@@ -25,7 +25,8 @@ def main():
     injetor = InjetorCO2(7, incrementoInj, (gerenciador.host, porta,))
     cliente = Cliente((gerenciador.host, porta,))
 
-    #valores dos parametros da estufa
+    #fila de valores dos parametros da estufa
+    #usada para compartilhar os valores entre diferentes processos
     temperaturas = SimpleQueue()
     umidades = SimpleQueue()
     co2 = SimpleQueue()
@@ -38,6 +39,7 @@ def main():
     #permite iniciar os componentes somente quando o gerenciador (servidor) estiver pronto
     gerenciadorPronto = Event()
     
+    #permite encerrar a aplicação quando solicitado
     encerraApp = Event()
 
     #declaração dos processos
@@ -76,7 +78,7 @@ def main():
     processoSensorCO2.terminate()
     processoInjetor.terminate()
     processoGerenciador.terminate()
-    
+
 def inputExcept(str):
     while True:
         try:

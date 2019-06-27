@@ -1,7 +1,6 @@
 from componente import Componente
 import socket
 from threading import Thread, Event
-from time import sleep
 
 class Gerenciador(Componente):
     def __init__(self, nconexoes, host, limitesAquecedor, limitesResfriador, limitesUmidade, limitesCO2):
@@ -29,18 +28,23 @@ class Gerenciador(Componente):
         self.ligaInjetor = Event()
         self.desligaInjetor = Event()
     
-    #processa o socket que receberá conexões dos outros componentes
+    #processa o socket que receberá solicitações de conexão dos outros componentes
     def processaSocket(self, porta, gerenciadorPronto):
+        # estabelece um socket para se comunicar com os demais componentes através do protocolo TCP/IP
         serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         serv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         serv.bind((self.host, porta))
         serv.listen(self.nconexoes)
+        # sinaliza que o gerenciador está pronto para receber conexões
         gerenciadorPronto.set()
+        # aceita qualquer conexão solicitada pelos componentes (até o máximo definido em 'nconexoes')
         while True:
             conexao = serv.accept()[0]
+            # inicializa uma thread para processar cada conexão aceita
             Thread(target=self.processaConexao, args=(conexao,)).start()
         serv.close()
 
+    #processa as conexões aceitas pelo gerenciador
     def processaConexao(self, conexao):
         with conexao:
             while True:
@@ -61,6 +65,7 @@ class Gerenciador(Componente):
             mensagem = self.geraMensagem(tipo='DEA', id_componente=id_atuador)
             conexao.sendall(mensagem)
 
+    # processa e envia a resposta de qualquer mensagem recebida através da conexão
     def processaMensagem(self, mensagem, conexao):
         if (mensagem['tipo'] == 'EVG' and mensagem['sequencia'] == '1'):
             if mensagem['id_componente'] == '1':
